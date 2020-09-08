@@ -16,7 +16,7 @@ This app implements the random intercept complementary log-log model suggested b
 This app is intended to be an alternative to the tool available at:
 <https://www.wiwiss.fu-berlin.de/fachbereich/vwl/iso/ehemalige/wilrich>
   
-<ins>Reference</ins>
+<ins>Reference</ins><br>
 Jarvis B, Wilrich C, Wilrich P-T. Estimation of the POD Function and the LOD of a Binary Microbiological Measurement Method from an Interlaboratory Experiment. *Journal of AOAC International*. 2019; 102(5):1617-1623.
 
 
