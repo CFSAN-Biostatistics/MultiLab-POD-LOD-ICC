@@ -40,7 +40,7 @@ source("helpers.R")
 
 #global variables
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v0.0.0.9005"
+glob_app_version <- "v1.0.0"
 
 glob_min_labs     <- 2L
 glob_max_labs     <- 30L
