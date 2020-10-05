@@ -19,7 +19,15 @@ LODpoint <- function(model, value, sample_size, inoculum) {
     my_prediction <- predict(model, my_df, re.form = NA, type = "response")
     my_prediction - value
   }
-  search_interval <- range(0, max(inoculum) + 0.1)
+  lower_endpt <- 0
+  upper_endpt <- max(inoculum) + 0.1
+  sign_lower  <- sign(findInt(lower_endpt))
+  sign_upper  <- sign(findInt(upper_endpt))
+  if (sign_lower == sign_upper || sign_lower == 0 || sign_upper == 0) {
+    #can occur if 'my_prediction' is zero
+    stop("Search space for uniroot() is not valid.")
+  }
+  search_interval <- range(lower_endpt, upper_endpt)
   pt_est <- uniroot(findInt, interval = search_interval)$root
   pt_est
 }

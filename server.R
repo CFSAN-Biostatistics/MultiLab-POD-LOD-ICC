@@ -1,10 +1,3 @@
-# "This app implements the random intercept complementary log-log model",
-# "suggested by Jarvis et al. (2019) to estimate probability of",
-# "detection (POD) and level of detection (LOD) from a multi-laboratory",
-# "validation study for a qualitative microbiological assay. This app also",
-# "calculates the intraclass correlation coefficient (ICC) to estimate",
-# "the proportion of total variance attributable to between-laboratory",
-# "variance."
 
 # ----------------------  Session info  ----------------------------------------
 my_R_version <- sessioninfo::platform_info()$version
@@ -367,7 +360,8 @@ server <- function(input, output, session) {
     input_validate2 <- all(dat >= 0)
     input_validate3 <- all(sum_data$inoculum > 0)  #each lab has >=1 positive level
     input_validate4 <- all(dat$ntest > 0)
-    input_validate5 <- all(sum_data$npos > 0)
+    input_validate5a <- all(sum_data$npos > 0)
+    input_validate5b <- all(sum_data$ntest - sum_data$npos > 0)
     input_validate6 <- all(dat$ntest >= dat$npos)
     input_validate7 <-
       all(is_wholenumber(dat$ntest)) && all(is_wholenumber(dat$npos))
@@ -378,7 +372,7 @@ server <- function(input, output, session) {
         text = "Some data are missing or non-numeric."
       )
     } else if (!input_validate2) {
-            shinyWidgets::sendSweetAlert(session = session,
+      shinyWidgets::sendSweetAlert(session = session,
         title = input_error, type = "error",
         text = "All data must be non-negative."
       )
@@ -392,10 +386,15 @@ server <- function(input, output, session) {
         title = input_error, type = "error",
         text = "Each inoculation level must have at least 1 tube inoculated."
       )
-    } else if (!input_validate5) {
+    } else if (!input_validate5a) {
       shinyWidgets::sendSweetAlert(session = session,
         title = input_error, type = "error",
         text = "Each lab must have at least 1 positive tube."
+      )
+    } else if (!input_validate5b) {
+      shinyWidgets::sendSweetAlert(session = session,
+        title = input_error, type = "error",
+        text = "Each lab must have at least 1 negative tube."
       )
     } else if (!input_validate6) {
       shinyWidgets::sendSweetAlert(session = session,
@@ -411,8 +410,8 @@ server <- function(input, output, session) {
 
     validate_inputs <-
       input_validate1 && input_validate2 && input_validate3 &&
-         input_validate4 && input_validate5 && input_validate6 &&
-         input_validate7
+         input_validate4 && input_validate5a && input_validate5b &&
+         input_validate6 && input_validate7
 
     validate(
       need(try(validate_inputs),
@@ -426,8 +425,6 @@ server <- function(input, output, session) {
   # Run calculations
   model_fit <- eventReactive(dat(), {
 
-    output$warning_message1 <- renderUI("")
-    output$warning_message2 <- renderUI("")
     #https://www.gitmemory.com/issue/dreamRs/shinyWidgets/301/662290306
     shinyjs::disable("download_results_bttn")
     updateTabItems(session = session, inputId = "my_tabs", selected = "results")
@@ -445,7 +442,7 @@ server <- function(input, output, session) {
 
     # step 1: catch errors and warnings
 
-    tst <- tryCatch(
+    tst_glmer1 <- tryCatch(
       lme4::glmer(cbind(npos, ntest - npos) ~
           offset(log(sample_size)) + offset(log(inoculum)) + (1 | lab_id),
         data = dat_no_zeroes, family = binomial(link = cloglog),
@@ -455,27 +452,27 @@ server <- function(input, output, session) {
       warning = function(w) w
     )
 
-    error1   <- ifelse(is(tst, "error"), 1, 0)    # 1 = error
-    warning1 <- ifelse(is(tst, "warning"), 1, 0)  # 1 = warning
+    error_glmer1   <- ifelse(is(tst_glmer1, "error"), 1, 0)    # 1 = error
+    warning_glmer1 <- ifelse(is(tst_glmer1, "warning"), 1, 0)  # 1 = warning
 
-    error2   <- 0
-    warning2 <- 0
+    error_glmer2   <- 0
+    warning_glmer2 <- 0
 
-    if (error1 == 0 && warning1 == 0) {
-      tst2 <- tryCatch(
+    if (error_glmer1 == 0 && warning_glmer1 == 0) {
+      tst_glmer2 <- tryCatch(
         summary(
-          tst
+          tst_glmer1
         ),
         error = function(e) e,
         warning = function(w) w
       )
-      error2   <- ifelse(is(tst2, "error"), 1, 0)    # 1 = error
-      warning2 <- ifelse(is(tst2, "warning"), 1, 0)  # 1 = warning
+      error_glmer2   <- ifelse(is(tst_glmer2, "error"), 1, 0)    # 1 = error
+      warning_glmer2 <- ifelse(is(tst_glmer2, "warning"), 1, 0)  # 1 = warning
     }
 
     use.glmer  <- 1
     model_type <- "random intercept"
-    if (error1 || warning1 || error2 || warning2) {
+    if (error_glmer1 || warning_glmer1 || error_glmer2 || warning_glmer2) {
       use.glmer <- 0
       model_type <- "fixed effects"
     }
@@ -519,7 +516,9 @@ server <- function(input, output, session) {
 
       # calculate ICC
       ICC <- performance::icc(fit1)
-      ICC <- ICC$ICC_adjusted
+      if (length(ICC) > 1 && !is.na(ICC)) {
+        ICC <- ICC$ICC_adjusted
+      }
 
       # Find effect of each lab and its standard error
       #
@@ -538,6 +537,26 @@ server <- function(input, output, session) {
 
       # find d0.5 (LOD50, or 25 or 75)
       # see 'helpers.R'
+      tst_LOD <- tryCatch(
+        LODpoint(model = fit1, value = lod_prob,
+          sample_size = sample_size, inoculum = dat$inoculum
+        ),
+        error = function(e) e,
+        warning = function(w) w
+      )
+      is_LOD_error <- is(tst_LOD, "error")
+      if (is_LOD_error) {
+        shinyWidgets::sendSweetAlert(session = session,
+          title = "LOD Calculation Error", type = "error",
+          text = "Possibly due to zero-probability predictions."
+        )
+      }
+      validate(
+        need(try(!is_LOD_error),
+          "LOD Error"
+        )
+      )
+
       LOD <- LODpoint(model = fit1, value = lod_prob,
         sample_size = sample_size, inoculum = dat$inoculum
       )
@@ -571,7 +590,9 @@ server <- function(input, output, session) {
     # alternative method when the first method fails: use glm
     #   no random effects are estimated
 
-    lack_of_variation <- FALSE
+    warning_messages_results_UI <- ""
+    warning_messages_results_xlsx <- ""
+
     if (use.glmer == 0) {
 
       shinyWidgets::progressSweetAlert(session = session,
@@ -591,16 +612,25 @@ server <- function(input, output, session) {
         timer = 0
       )
 
-      output$warning_message1 <- renderUI({
-        tags$p(div(HTML(
-          "<span style = 'font-size:150%; color:red'>",
-          "<br><b>Warning: </b>",
-          "A random intercept model cannot be used for this data.",
-          "A model with only <em>fixed effects</em> is used instead."
-        )))
-      })
+      warning_messages_results_UI <- paste0(
+        "<br><strong>Warnings: </strong><br>",
+        "<ul>",
+          "<li>",
+            "A random intercept model cannot be used for this data. ",
+            "A model with only <em>fixed effects</em> is used instead.",
+          "</li>"
+      )
 
-      tst3 <- tryCatch(
+      warning_messages_results_xlsx <- c(
+        "",
+        "Warnings: ",
+        paste0(
+          "A random intercept model cannot be used for this data. ",
+          "A model with only fixed effects is used instead."
+        )
+      )
+
+      tst_glm <- tryCatch(
         glm(cbind(npos, ntest - npos) ~
             offset(log(sample_size)) + offset(log(inoculum)),
           data = dat_no_zeroes, family = binomial(link = cloglog)
@@ -609,23 +639,28 @@ server <- function(input, output, session) {
         warning = function(w) w
       )
 
-      error3   <- ifelse(is(tst3, "error"), 1, 0)   # 1 = error
-      warning3 <- ifelse(is(tst3, "warning"), 1, 0) # 1 = warning
+      error_glm   <- ifelse(is(tst_glm, "error"), 1, 0)   # 1 = error
+      warning_glm <- ifelse(is(tst_glm, "warning"), 1, 0) # 1 = warning
 
-      if (error3 || warning3) {
-        lack_of_variation <- TRUE
-        output$warning_message2 <- renderUI({
-          tags$p(div(HTML(
-            "<span style = 'font-size:150%; color:red'>",
-            "<b>Warning: </b>",
-            "POD and LOD estimates may be inaccurate because of a",
+      if (error_glm || warning_glm) {
+        warning_messages_results_UI <- paste0(
+          warning_messages_results_UI,
+          "<li>",
+            "POD and LOD estimates may be inaccurate because of a ",
+            "lack of variation in the outcome or an issue with the model.",
+          "</li>"
+        )
+        warning_messages_results_xlsx <- c(
+          warning_messages_results_xlsx,
+          paste0(
+            "POD and LOD estimates may be inaccurate because of a ",
             "lack of variation in the outcome or an issue with the model."
-          )))
-        })
+          )
+        )
         shinyalert::shinyalert(
           title = "Warning",
-          text = paste(
-            "POD and LOD estimates may be inaccurate because of a lack of",
+          text = paste0(
+            "POD and LOD estimates may be inaccurate because of a lack of ",
             "variation in the outcome or an issue with the model."
           ),
           type = "warning",
@@ -649,13 +684,139 @@ server <- function(input, output, session) {
       sigma <- "N/A"  #SD of log lab effects
 
       # ICC
-
-      ## use Donner's method to calculate ICC (anova estimate):
-      don <- aod::donner(
-        cbind(npos, ntest - npos) ~ factor(inoculum),
-        data = dat
+      # Un-grouping the data (1 row per test tube)
+      y1 <- data.frame(
+        lapply(dat, function(x) rep(x, dat$npos)),
+        y = 1
       )
-      ICC <- don@rho
+      y1 <- y1[, c("lab_id", "inoculum", "y")]
+      y0 <- data.frame(
+        lapply(dat, function(x) rep(x, dat$ntest - dat$npos)),
+        y = 0
+      )
+      y0 <- y0[, c("lab_id", "inoculum", "y")]
+      my_linear_data <- rbind(y1, y0)
+
+      tst_lmer1 = tryCatch(
+        lme4::lmer(y ~ (1 | lab_id) + inoculum,
+          data = my_linear_data,
+          REML = TRUE,
+          control = lme4::lmerControl(
+            check.conv.singular = lme4::.makeCC(
+              action = "ignore", tol = 1e-4
+            )
+          )
+        ),
+        error = function(e) e,
+        warning = function(w) w
+      )
+
+      error_lmer1   <- ifelse(is(tst_lmer1, "error"), 1, 0)  # 1 = error
+      warning_lmer1 <- ifelse(is(tst_lmer1, "warning"), 1, 0)
+
+      error_lmer2   <- 0
+      warning_lmer2 <- 0
+
+      if (error_lmer1 == 0 && warning_lmer1 == 0) {
+        tst_lmer2 <- tryCatch(
+          summary(tst_lmer1),
+          error = function(e) e,
+          warning = function(w) w
+        )
+        error_lmer2   <- ifelse(is(tst_lmer2, "error"), 1, 0)  # 1 = error
+        warning_lmer2 <- ifelse(is(tst_lmer2, "warning"), 1, 0)
+      }
+
+      #if (FALSE) {   #to force ANCOVA estimate for testing
+      if (!(error_lmer1 || warning_lmer1 || error_lmer2 || warning_lmer2)) {
+        # LMM approach
+        shinyalert::shinyalert(
+          title = "Warning",
+          text = "ICC is calculated based on a <em>linear mixed effects</em> model.",
+          html = TRUE,
+          type = "warning",
+          timer = 0
+        )
+        warning_messages_results_UI <- paste0(
+          warning_messages_results_UI,
+          "<li>",
+            "ICC is calculated based on a <em>linear mixed effects</em> model.",
+          "</li>"
+        )
+        warning_messages_results_xlsx <- c(
+          warning_messages_results_xlsx,
+          "ICC is calculated based on a linear mixed effects model."
+        )
+        fit_lmer <- lme4::lmer(y ~ (1 | lab_id) + inoculum,
+          data = my_linear_data,
+          REML = TRUE,
+          control = lme4::lmerControl(
+            check.conv.singular = lme4::.makeCC(
+              action = "ignore", tol = 1e-4
+            )
+          )
+        )
+
+        vc <- lme4::VarCorr(fit_lmer)
+        vc <- as.data.frame(vc)
+        var_between <- vc[vc$grp == "lab_id", "vcov"]
+        var_within  <- vc[vc$grp == "Residual", "vcov"]
+        var_total   <- var_between + var_within
+        ICC <- var_between / var_total
+      } else {
+        # ANCOVA approach
+        shinyalert::shinyalert(
+          title = "Warning",
+          text = "ICC is calculated using an <em>analysis of covariance</em> approach.",
+          html = TRUE,
+          type = "warning",
+          timer = 0
+        )
+        warning_messages_results_UI <- paste0(
+          warning_messages_results_UI,
+          "<li>",
+            "ICC is calculated using an <em>analysis of covariance</em> approach.",
+          "</li>"
+        )
+        warning_messages_results_xlsx <- c(
+          warning_messages_results_xlsx,
+          "ICC is calculated using an analysis of covariance approach."
+        )
+        # use the method in Stanish and Taylor (1983)
+        fit_lm <- lm(
+          y ~ as.factor(lab_id) + I(inoculum - mean(inoculum)),
+          data = my_linear_data
+        )
+        n_labs <- length(unique(dat$lab_id))
+        ns <- aggregate(
+          y ~ as.factor(lab_id),
+          data = my_linear_data,
+          FUN = length
+        )[, "y"]
+        n_labs_minus_1 <- n_labs - 1
+        multiplier <- 1 / n_labs_minus_1
+        sum_ns     <- sum(ns)
+        ns_sq      <- ns ^ 2
+        sum_ns_sq  <- sum(ns_sq)
+        n0 <- multiplier * (sum_ns - sum_ns_sq) / sum_ns
+        grand_mean_inoculum <- mean(my_linear_data$inoculum)
+        data_inoculum_lab <- aggregate(
+          inoculum ~ lab_id,
+          data = my_linear_data,
+          FUN = mean
+        )
+        colnames(data_inoculum_lab)[2] <- "mean_inoculum"
+        numer <- sum(ns_sq * (data_inoculum_lab$mean_inoculum - grand_mean_inoculum) ^ 2)
+        denom <- sum((my_linear_data$y - grand_mean_inoculum) ^ 2)
+        n01   <- multiplier * ((n_labs_minus_1 * n0) - (numer / denom))  #Eq 2.4
+        fit_anova   <- anova(fit_lm)
+        var_within  <- fit_anova$"Mean Sq"[3]  #MS Residuals
+        MS_labs     <- fit_anova$"Mean Sq"[1]  #MS Labs
+        var_between <- (MS_labs - var_within) / n01
+        var_total   <- var_within + var_between
+        ICC <- var_between / var_total
+        # (fit_anova$F[1] - 1) / (fit_anova$F[1] + n01 - 1)  #Eq 2.5 (equivalent)
+      }
 
       # individual intercept and its SE for each lab
       fit2 <- glm(cbind(npos, ntest - npos) ~
@@ -711,7 +872,11 @@ server <- function(input, output, session) {
     LOD.L_char     <- formatC(LOD.L, digits = 3, format = "f")
     LOD.U_char     <- formatC(LOD.U, digits = 3, format = "f")
 
-    ICC_char       <- formatC(ICC, digits = 3, format = "f")
+    if (is.na(ICC)) {
+      ICC_char <- "N/A"
+    } else {
+      ICC_char <- formatC(ICC, digits = 3, format = "f")
+    }
 
     if (use.glmer == 1) {
       sigma_char <- formatC(sigma, digits = 3, format = "f")
@@ -721,9 +886,17 @@ server <- function(input, output, session) {
       stop("Problem with 'use.glmer'.")
     }
 
+    output$warning_messages_results_UI <- renderUI({
+      tags$p(div(HTML(
+        "<span style = 'font-size:150%; color:red'>",
+        warning_messages_results_UI,
+        "</ul>"
+      )))
+    })
+
     list(
       model_type = model_type, fit1 = fit1, fit2 = fit2,
-      lack_of_variation = lack_of_variation,
+      warning_messages_results_xlsx = warning_messages_results_xlsx,
       mu = mu, mu_char = mu_char,
       mu_log = mu_log, mu_log_char = mu_log_char,
       sd.mu_log = sd.mu_log, sd.mu_log_char = sd.mu_log_char,
@@ -1127,6 +1300,7 @@ server <- function(input, output, session) {
     shinyjs::enable("download_results_bttn")
   })
 
+
   #https://mastering-shiny.org/action-transfer.html
   output$download_results <- downloadHandler(
     filename = function() {
@@ -1155,7 +1329,9 @@ server <- function(input, output, session) {
       workbook <- openxlsx::createWorkbook()
       colnames_style <- openxlsx::createStyle(textDecoration = "bold")
 
-      openxlsx::addWorksheet(workbook, sheetName = "Description")
+      openxlsx::addWorksheet(workbook, sheetName = "Experiment Description")
+      openxlsx::freezePane(workbook, sheet = "Experiment Description", firstRow = TRUE)
+
       calc <- calculate_clicked()
       if (calc$use_example) {
         my_exp_description <-
@@ -1184,6 +1360,19 @@ server <- function(input, output, session) {
             paste0("Use example data?: ",         calc$use_example)
           )
       }
+      openxlsx::conditionalFormatting(workbook, sheet = "Experiment Description",
+        cols = 1, rows = 1:100,
+        type = "contains", rule = "EXPERIMENT DESCRIPTION/",
+        style = colnames_style
+      )
+      openxlsx::setColWidths(workbook, sheet = "Experiment Description",
+        cols = 1, widths = 100
+      )
+      openxlsx::writeData(workbook, sheet = "Experiment Description", x = my_exp_description)
+
+      openxlsx::addWorksheet(workbook, sheetName = "Analysis")
+      openxlsx::freezePane(workbook, sheet = "Analysis", firstRow = TRUE)
+
       my_analysis <-
         c("ANALYSIS/",
           paste0("Analysis date:  ",    calc$date_time),
@@ -1191,6 +1380,19 @@ server <- function(input, output, session) {
           paste0("Confidence level:  ", calc$conf_level),
           paste0("Model used:  ",       model_fit()$model_type)
         )
+      openxlsx::conditionalFormatting(workbook, sheet = "Analysis",
+        cols = 1, rows = 1:100,
+        type = "contains", rule = "ANALYSIS/",
+        style = colnames_style
+      )
+      openxlsx::setColWidths(workbook, sheet = "Analysis",
+        cols = 1, widths = 100
+      )
+      openxlsx::writeData(workbook, sheet = "Analysis", x = my_analysis)
+
+      openxlsx::addWorksheet(workbook, sheetName = "App Information")
+      openxlsx::freezePane(workbook, sheet = "App Information", firstRow = TRUE)
+
       my_app_info <-
         c(
           "APP INFORMATION/",
@@ -1198,49 +1400,18 @@ server <- function(input, output, session) {
           paste0("App version:  ", glob_app_version),
           my_R_version
         )
-      my_description <- c(
-        my_exp_description, "\n",
-        my_analysis, "\n",
-        my_app_info
-      )
-      openxlsx::conditionalFormatting(workbook, sheet = "Description",
-        cols = 1, rows = 1:100,
-        type = "contains", rule = "EXPERIMENT DESCRIPTION/",
-        style = colnames_style
-      )
-      openxlsx::conditionalFormatting(workbook, sheet = "Description",
-        cols = 1, rows = 1:100,
-        type = "contains", rule = "ANALYSIS/",
-        style = colnames_style
-      )
-      openxlsx::conditionalFormatting(workbook, sheet = "Description",
+      openxlsx::conditionalFormatting(workbook, sheet = "App Information",
         cols = 1, rows = 1:100,
         type = "contains", rule = "APP INFORMATION/",
         style = colnames_style
       )
-      openxlsx::setColWidths(workbook, sheet = "Description", cols = 1,
-        widths = 100
+      openxlsx::setColWidths(workbook, sheet = "App Information",
+        cols = 1, widths = 100
       )
-      openxlsx::writeData(workbook, sheet = "Description", x = my_description)
+      openxlsx::writeData(workbook, sheet = "App Information", x = my_app_info)
 
       openxlsx::addWorksheet(workbook, sheetName = "Results")
-
-      if (model_fit()$model_type == "fixed effects") {
-        fixed_effects_warning <- paste(
-          "Warning: A random intercept model could not be used for this data.",
-          "A model with only fixed effects was used instead."
-        )
-      } else {
-        fixed_effects_warning <- ""
-      }
-      if (model_fit()$lack_of_variation) {
-        lack_of_variation_warning <- paste(
-          "Warning: POD and LOD estimates may be inaccurate because of a",
-          "lack of variation in the outcome or an issue with the model."
-        )
-      } else {
-        lack_of_variation_warning <- ""
-      }
+      openxlsx::freezePane(workbook, sheet = "Results", firstRow = TRUE)
 
       my_results <-
         c("RESULTS/",
@@ -1250,8 +1421,7 @@ server <- function(input, output, session) {
           paste0(calc$lod_choice, ":  ",     model_fit()$LOD_char),
           paste0(calc$lod_choice, " (lower limit):  ", model_fit()$LOD.L_char),
           paste0(calc$lod_choice, " (upper limit):  ", model_fit()$LOD.U_char),
-          paste0(fixed_effects_warning),
-          paste0(lack_of_variation_warning)
+          model_fit()$warning_messages_results_xlsx
         )
       openxlsx::conditionalFormatting(workbook, sheet = "Results",
         cols = 1, rows = 1:100,
@@ -1264,6 +1434,7 @@ server <- function(input, output, session) {
       openxlsx::writeData(workbook, sheet = "Results", x = my_results)
 
       openxlsx::addWorksheet(workbook, sheetName = "POD Curves")
+
       #https://stackoverflow.com/questions/14810409/save-plots-made-in-a-shiny-app
       plot_width  <- 10
       plot_height <- 0.45 * plot_width  #aspect_ratio = 0.45
@@ -1283,6 +1454,7 @@ server <- function(input, output, session) {
 
       openxlsx::addWorksheet(workbook, sheetName = "Lab Effects")
       openxlsx::freezePane(workbook, sheet = "Lab Effects", firstRow = TRUE)
+
       my_lab_effects <- dplyr::rename(model_fit()$lab_effects,
         "Lab ID"           = labID,
         "Estimated effect" = estimated.effect,
@@ -1298,6 +1470,7 @@ server <- function(input, output, session) {
 
       openxlsx::addWorksheet(workbook, sheetName = "Data")
       openxlsx::freezePane(workbook, sheet = "Data", firstRow = TRUE)
+
       my_data <- dplyr::rename(dat(),
         "Lab ID"            = lab_id,
         "Inoculation level" = inoculum,
@@ -1314,6 +1487,7 @@ server <- function(input, output, session) {
 
       openxlsx::addWorksheet(workbook, sheetName = "R Packages")
       openxlsx::freezePane(workbook, sheet = "R Packages", firstRow = TRUE)
+
       openxlsx::setColWidths(workbook, sheet = "R Packages",
         cols = 1:ncol(my_package_info),
         widths = c(18, 14, 11)
