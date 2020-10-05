@@ -444,8 +444,25 @@ my_calculator <- tabItem(
 my_results <- tabItem(
   tabName = "results",
 
-  h2(strong("Results")),
-  br(),
+  fluidRow(
+    column(width = 6,
+      h2(strong("Results"))
+    ),
+    column(width = 3,
+      br(), br(),
+      shinyjs::disabled(
+        shinyWidgets::downloadBttn("download_results",
+          label = "Download Results",
+          style = "gradient",
+          color = "primary",
+          size = "lg",
+          block = FALSE,
+          no_outline = FALSE
+        )
+      )
+    )
+  ),
+
   tabsetPanel(
     id = "mod",
     type = "tabs",
@@ -458,8 +475,8 @@ my_results <- tabItem(
       ),
       value = "model_params",
       icon = icon("table", lib = "font-awesome"),
-      htmlOutput("warning_message1"),
-      htmlOutput("warning_message2"),
+
+      htmlOutput("warning_messages_results_UI"),
 
       br(),
       column(
@@ -486,17 +503,6 @@ my_results <- tabItem(
             )
           )
         )
-      ),
-      column(width = 3,
-        shinyjs::disabled(
-          shinyWidgets::downloadBttn("download_results", label = "Download Results",
-            style = "gradient",
-            color = "primary",
-            size = "lg",
-            block = FALSE,
-            no_outline = FALSE
-          )
-        )
       )
     ),
 
@@ -514,8 +520,6 @@ my_results <- tabItem(
     )
   )
 )
-
-
 
 
 ###########################  Analysis Details  #################################
@@ -569,12 +573,13 @@ my_analysis_details <- tabItem(tabName = "analysis_details",
       "between-laboratory variance. A small ICC value indicates that an assay",
       "has little dependence on laboratory choice and is therefore more robust."
     ),
-    p(
-       "The ICC is calculated using the", em("performance"),
-       "R package (Lüdecke et al., 2020) for the random intercept model or the",
-       em("aod"), "package (Lesnoff et al., 2012) for the fixed effects model
-       (using the Donner approach)."
-    ),
+    p(HTML(
+      "The ICC is calculated using the <em>performance</em>",
+      "R package (Lüdecke et al., 2020) for the random intercept model.",
+      "For the fixed effects model, the <em>lme4</em> package",
+      "(Bates et al., 2015) is used if possible (LMM approach); the",
+      "standard <em>stats</em> package is used otherwise (ANCOVA approach)."
+    )),
     style = "font-size: 18px; line-height: 1.25"
   )
 )
@@ -588,35 +593,59 @@ my_references <- tabItem(tabName = "references",
   br(),
   tags$ol(
     tags$li(
-      p(
-        'Bates D, Maechler M, Bolker B, Walker S (2015).',
-        strong('Fitting linear mixed-effects models using lme4.'),
-        em('Journal of Statistical Software,'), '67(1), 1-48.'
-      )
+      p(HTML(
+        '<div>',
+          'Bates D, Maechler M, Bolker B, Walker S (2015).',
+          '<strong>Fitting linear mixed-effects models using lme4.</strong>',
+          '<i>Journal of Statistical Software</i>, 67(1), 1-48.',
+        '</div>'
+      ))
     ),
     tags$li(
-      p(
-        'Jarvis B, Wilrich C, Wilrich P-T (2019).',
-        strong(
-          'Estimation of the POD function and the LOD of a binary',
-          'microbiological measurement method from an interlaboratory experiment.',
-        ),
-        em('Journal of AOAC International,'), '102(5), 1617-1623.'
-      )
+      p(HTML(
+        '<div>',
+          'Jarvis B, Wilrich C, Wilrich P-T (2019).',
+          '<strong>',
+            'Estimation of the POD function and the LOD of a binary',
+            'microbiological measurement method from an interlaboratory experiment.',
+          '</strong>',
+          '<i>Journal of AOAC International</i>, 102(5), 1617-1623.',
+        '</div>'
+      ))
     ),
     tags$li(
-      p(
-        'Lesnoff M, Lancelot R (2012).',
-        strong('aod: Analysis of overdispersed data.'),
-        'R package, URL https://cran.r-project.org/package=aod'
-      )
+      p(HTML(
+        '<div>',
+          'Lüdecke D, Makowski D, Waggoner P, Patil I (2020).',
+          '<strong>performance: Assessment of regression models performance.</strong>',
+          'R package, URL https://CRAN.R-project.org/package=performance',
+        '</div>'
+      ))
     ),
     tags$li(
-      p(
-        'Lüdecke D, Makowski D, Waggoner P, Patil I (2020).',
-        strong('performance: Assessment of regression models performance.'),
-        'R package, URL https://CRAN.R-project.org/package=performance'
-      )
+      p(HTML(
+        '<div>',
+          'Nakagawa S, Johnson PCD, Schielzeth H (2017).',
+          '<strong>',
+            'The coefficient of determination R<sup>2</sup> and intra-class',
+            'correlation coefficient from generalized linear mixed-effects',
+            'models revisited and expanded.',
+          '</strong>',
+          '<i>Journal of the Royal Society Interface</i>, 14, 20170213.',
+        '</div>'
+      ))
+    ),
+    tags$li(
+      p(HTML(
+        '<div>',
+          'Stanish WM, Taylor N (1983).',
+          '<strong>',
+            'Estimation of the intraclass correlation coefficient for the',
+            'analysis of covariance model.',
+          '</strong>',
+          '<i>The American Statistician</i>, 37(3), 221–224.',
+        '</div>'
+      ))
     ),
 
   style = "font-size: 18px; line-height: 1.2"
@@ -648,3 +677,4 @@ ui <- dashboardPage(
   title = glob_app_title
 )
 ################################################################################
+

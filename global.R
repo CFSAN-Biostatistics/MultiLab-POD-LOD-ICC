@@ -5,10 +5,13 @@
 # Authors: Steven Wang, John Ihrie
 #
 # Details:
-#   Use the mixed effects (random intercept) complementary log-log model ('lme4'
-#   package) instead of Wilrich's Excel tool. Uses the 'lme4' package. Also
-#   includes intraclass correlation coefficient (ICC) to quantify
-#   reproducibility of results.
+#   This app implements the random intercept complementary log-log model
+#   suggested by Jarvis et al. (2019) to estimate probability of
+#   detection (POD) and level of detection (LOD) from a multi-laboratory
+#   validation study for a qualitative (binary) microbiological assay.
+#   Also calculates the intraclass correlation coefficient (ICC) to estimate
+#   the proportion of total variance attributable to between-laboratory
+#   variance.
 #
 # Files started: 6/4/2020
 #
@@ -34,13 +37,12 @@ library(performance) #ICC
 library(ggplot2)
 library(openxlsx)
 library(sessioninfo)
-library(aod)
 
 source("helpers.R")
 
 #global variables
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.0.0"
+glob_app_version <- "v1.1.0"
 
 glob_min_labs     <- 2L
 glob_max_labs     <- 30L
@@ -108,3 +110,4 @@ colnames(dat_example_ui) <- c(
   "Lab Name", "Inoculation Level",
   "Inoculated Tubes", "Positive Tubes"
 )
+
