@@ -1,5 +1,3 @@
-# MultiLab-POD-LOD-ICC
-
 ## **Introduction**
 
 ---
@@ -13,10 +11,9 @@ This is a Shiny app for interlaboratory microbiological method validation studie
 
 This app implements the random intercept complementary log-log model suggested by Jarvis et al. (2019) to estimate probability of detection (POD) and level of detection (LOD) from a multi-laboratory validation study for a qualitative (binary) microbiological assay. This app also calculates the intraclass correlation coefficient (ICC) to estimate the proportion of total variance attributable to between-laboratory variance.
 
-This app is intended to be an alternative to the tool available at:
-<https://www.wiwiss.fu-berlin.de/fachbereich/vwl/iso/ehemalige/wilrich>
+This app is intended to be an alternative to the tool discussed in the reference below.
   
-<ins>Reference</ins><br>
+<ins>Reference</ins>
 Jarvis B, Wilrich C, Wilrich P-T. Estimation of the POD Function and the LOD of a Binary Microbiological Measurement Method from an Interlaboratory Experiment. *Journal of AOAC International*. 2019; 102(5):1617-1623.
 
 
@@ -37,7 +34,6 @@ R version 3.5 or higher is needed. The following R packages (available on CRAN) 
 - ggplot2 (>= v3.3.2)
 - openxlsx (>= 4.1.5)
 - sessioninfo (>= 1.1.1)
-- aod (>= v1.3.1)
 
 
 ### **Running the code**
