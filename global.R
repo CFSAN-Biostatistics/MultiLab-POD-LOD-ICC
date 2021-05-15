@@ -9,8 +9,8 @@
 #   suggested by Jarvis et al. (2019) to estimate probability of
 #   detection (POD) and level of detection (LOD) from a multi-laboratory
 #   validation study for a qualitative (binary) microbiological assay.
-#   Also calculates the intraclass correlation coefficient (ICC) to estimate
-#   the proportion of total variance attributable to between-laboratory
+#   Also calculates the intra-laboratory correlation coefficient (ICC) to
+#   estimate the proportion of total variance attributable to between-laboratory
 #   variance.
 #
 # Files started: 6/4/2020
@@ -33,16 +33,17 @@ library(shinyWidgets)
 library(shinyalert)
 library(shinybusy)
 library(lme4)
-library(performance) #ICC
+#library(performance) #ICC (no longer used as of v1.2.0)
 library(ggplot2)
 library(openxlsx)
 library(sessioninfo)
+library(dplyr)
 
 source("helpers.R")
 
 #global variables
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.1.0"
+glob_app_version <- "v1.2.1"
 
 glob_min_labs     <- 2L
 glob_max_labs     <- 30L
@@ -56,7 +57,9 @@ glob_max_levels <- 12L  #to speed up loading of app
 glob_default_levels <- 3L
 
 glob_min_size     <- 0
-glob_default_size <- 25  #sample size in g or ml
+glob_default_size <- 25  #Sample (test portion) size in g or ml
+
+glob_plot_aspect_ratio <- 0.45
 
 #global styles
 glob_style_fill_labs <-
@@ -65,7 +68,7 @@ glob_style_fill_labs <-
   )
 
 # Example data -----------------------------------------------------------------
-d  <- c(0, 0.04, 0.08, 0.16, 0.32)  #inoculation level (CFU/g)
+d  <- c(0, 0.04, 0.08, 0.16, 0.32)  #inoculation level (CFU/mL)
 n1 <- c(1, 8, 8, 8, 1)  # number of inoculated tubes for lab1
 y1 <- c(0, 5, 6, 8, 1)  # number of positive tubes for lab1
 n2 <- c(1, 8, 8, 8, 1)
@@ -88,7 +91,7 @@ n10 <- c(1, 8, 8, 8, 1)
 y10 <- c(0, 2, 3, 8, 1)
 
 glob_sample_size_example <- 25
-glob_sample_unit_example <- "mL"
+glob_sample_unit_example <- "g"
 glob_num_labs_example    <- 10
 glob_num_levels_example  <- length(d)
 dat_example <- data.frame(
@@ -97,6 +100,7 @@ dat_example <- data.frame(
   ntest = as.integer(c(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10)),
   npos  = as.integer(c(y1, y2, y3, y4, y5, y6, y7, y8, y9, y10))
 )
+
 dat_example$sample_size <- glob_sample_size_example
 rm(d, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10)
 rm(y1, y2, y3, y4, y5, y6, y7, y8, y9, y10)
@@ -110,4 +114,3 @@ colnames(dat_example_ui) <- c(
   "Lab Name", "Inoculation Level",
   "Inoculated Tubes", "Positive Tubes"
 )
-
