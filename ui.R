@@ -23,7 +23,7 @@ my_sidebar <- sidebarMenu(
     column(width = 8, align = "center",
       selectInput("lod_choice", label = "Choose LOD",
         width = "100%",
-        choices = c("LOD25", "LOD50", "LOD75"),
+        choices = c("LOD50"),
         selected = "LOD50"
       )
     )
@@ -33,7 +33,7 @@ my_sidebar <- sidebarMenu(
     column(width = 8, align = "center",
       selectInput("conf_level", label = "Confidence level",
         width = "100%",
-        choices = c("80%", "90%", "95%", "99%"),
+        choices = c("90%", "95%"),
         selected = "95%"
       )
     )
@@ -101,8 +101,7 @@ my_calculator <- tabItem(
           "#num_levels {background-color:white; color:black; font-size:16px; text-align:center}"
         ),
         fluidRow(
-
-          column(width = 7, align = "center",
+          column(width = 6, align = "center",
             wellPanel(
               style = "color:white; background:steelblue",
               textInput("exp_name",
@@ -123,7 +122,7 @@ my_calculator <- tabItem(
               )
             )
           ),
-          column(width = 5, align = "center",
+          column(width = 6, align = "center",
             wellPanel(
               style = "color:white; background:steelblue;",
               numericInput("num_labs",
@@ -145,18 +144,18 @@ my_calculator <- tabItem(
               numericInput("sample_size",
                 label = div(
                   style = "font-size:18px",
-                  HTML("Sample size")
+                  HTML("Test portion size (g or mL)")
                 ),
                 width = "100%", value = glob_default_size,
                 min = glob_min_size
               ),
               shinyWidgets::radioGroupButtons(
-                inputId = "sample_unit",
+                inputId = "lod_unit",
                 label = div(
                   style = "font-size:18px",
-                  "Sample unit"
+                  "LOD unit"
                 ),
-                choices = c("g", "mL"),
+                choices = c("CFU/g", "CFU/mL", "CFU/test portion"),
                 size = "lg",
                 individual = TRUE,
                 checkIcon = list(
@@ -268,7 +267,7 @@ my_calculator <- tabItem(
           width = 12,
             h4(
               paste(
-                "Sample size:", glob_sample_size_example,
+                "Test portion size:", glob_sample_size_example,
                 glob_sample_unit_example
               )
             ),
@@ -394,8 +393,7 @@ my_calculator <- tabItem(
           ),
           tags$li(
             p(
-              "In the sidebar, choose the desired LOD (25, 50, or 75) and the",
-              "level for the confidence limits."
+              "In the sidebar, choose the level for the confidence limits."
             )
           ),
           tags$li(
@@ -528,19 +526,14 @@ my_analysis_details <- tabItem(tabName = "analysis_details",
 
   h2(strong("Analysis Details")),
   br(),
-
   em(h3("Background")),
   div(
     p(
       "This app implements the random intercept complementary log-log model",
       "suggested by Jarvis et al. (2019) to estimate probability of",
       "detection (POD) and level of detection (LOD) from a multi-laboratory",
-      "validation study for a qualitative (binary) microbiological assay."
-    ),
-    p(
-      "The model is fit using R statistical software, which does not have",
-      "the constraints seen in spreadsheet applications such as the",
-      "tool described in Jarvis et al. (2019)."
+      "validation study for a qualitative (binary) microbiological assay.",
+      "The model is fit using R statistical software."
     ),
     style = "font-size: 18px; line-height: 1.25"
   ),
@@ -556,10 +549,15 @@ my_analysis_details <- tabItem(tabName = "analysis_details",
       "Linear [Fixed Effects] Model (GLM) instead."
     ),
     p(
-      "The model is then used to estimate POD and LOD for the assay. The",
-      "confidence limits for LOD are obtained using bootstrapping for the",
-      "random intercept model or the method described in Jarvis et al. (2019)",
-      "for the fixed effects model."
+      "The model is then used to estimate the POD function for the assay.",
+      "For the random intercept model, confidence limits for POD are obtained",
+      "using model-based parametric bootstrapping; LOD and its confidence limits",
+      "are then obtained using a numerical search of the POD function and its",
+      "confidence limits. For the fixed effects model, LOD and its confidence",
+      "limits are obtained using Equations 32 and 33 in Jarvis et al. (2019);",
+      "the confidence limits for POD are obtained using the fitted POD",
+      "values and a margin of error using a t critical value and the estimated",
+      "standard errors from the fitted POD function."
     ),
     style = "font-size: 18px; line-height: 1.25"
   ),
@@ -568,17 +566,20 @@ my_analysis_details <- tabItem(tabName = "analysis_details",
   em(h3("ICC")),
   div(
     p(
-      "This app also calculates the intraclass correlation coefficient (ICC)",
+      "This app also calculates the intra-laboratory correlation coefficient (ICC)",
       "to estimate the proportion of total variance attributable to",
       "between-laboratory variance. A small ICC value indicates that an assay",
       "has little dependence on laboratory choice and is therefore more robust."
     ),
     p(HTML(
-      "The ICC is calculated using the <em>performance</em>",
-      "R package (Lüdecke et al., 2020) for the random intercept model.",
+      "For the random intercept model, the ICC is calculated using between-lab",
+      "variance estimated from the model and within-lab variance of (&pi; ^ 2) / 6",
+      "(Hedeker et al., 2006).",
       "For the fixed effects model, the <em>lme4</em> package",
-      "(Bates et al., 2015) is used if possible (LMM approach); the",
-      "standard <em>stats</em> package is used otherwise (ANCOVA approach)."
+      "(Bates et al., 2015) is used if possible (LMM approach) to estimate both",
+      "the between-lab variance and within-lab variance; otherwise,",
+      "the standard <em>stats</em> package is used to apply the ANCOVA method",
+      "of Stanish et al. (1983)."
     )),
     style = "font-size: 18px; line-height: 1.25"
   )
@@ -604,21 +605,23 @@ my_references <- tabItem(tabName = "references",
     tags$li(
       p(HTML(
         '<div>',
-          'Jarvis B, Wilrich C, Wilrich P-T (2019).',
+          'Hedeker D, Gibbons RD (2006).',
           '<strong>',
-            'Estimation of the POD function and the LOD of a binary',
-            'microbiological measurement method from an interlaboratory experiment.',
+            'Longitudinal Data Analysis.',
           '</strong>',
-          '<i>Journal of AOAC International</i>, 102(5), 1617-1623.',
+          '<i>John Wiley and Sons, Inc.</i>, Hoboken, New Jersey.',
         '</div>'
       ))
     ),
     tags$li(
       p(HTML(
         '<div>',
-          'Lüdecke D, Makowski D, Waggoner P, Patil I (2020).',
-          '<strong>performance: Assessment of regression models performance.</strong>',
-          'R package, URL https://CRAN.R-project.org/package=performance',
+          'Jarvis B, Wilrich C, Wilrich P-T (2019).',
+          '<strong>',
+            'Estimation of the POD function and the LOD of a binary',
+            'microbiological measurement method from an interlaboratory experiment.',
+          '</strong>',
+          '<i>Journal of AOAC International</i>, 102(5), 1617-1623.',
         '</div>'
       ))
     ),

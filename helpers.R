@@ -3,7 +3,7 @@
 ################################################################################
 
 
-#from ?is.integer
+#from help(is.integer)
 is_wholenumber <- function(x, tol = .Machine$double.eps ^ 0.5) {
   abs(x - round(x)) < tol
 }
@@ -37,57 +37,59 @@ LODpoint <- function(model, value, sample_size, inoculum) {
 # )
 
 
-LODlimit <-
-  function(model, value, sample_size, inoculum,
-           limit = c("lower", "upper"), conf_level = 0.95,
-           num_sim = 200L, seed = 1234) {
-  # Returns the lower (or upper) confidence limit for LOD.
-  limit <- match.arg(limit)
-  findInt.LU <- function(x) {
-    #returns a function whose root is the lower (or upper) CL for LOD
-    my_df <- data.frame(sample_size = sample_size, lab_id = NA, inoculum = x)
-    predictFUN <- function(model) {
-      predict(model, my_df, re.form = NA, type = "response")
-    }
-    my_boot <- lme4::bootMer(model, FUN = predictFUN,
-                             nsim = num_sim, seed = seed
-    )
-    if (limit == "lower") {
-      my_index <- 2
-    } else {
-      my_index <- 1
-    }
-    confint(my_boot, level = conf_level)[my_index] - value
-  }
-
-  #slower, but shouldn't fail
-  # note: cannot start with 0
-  search_interval <- range(0.001, max(inoculum) + 0.1)
-  uniroot(findInt.LU, interval = search_interval)$root
-
-  # ##############################
-  # #faster, but could fail
-  # pt_est <- LODpoint(model, value, sample_size, inoculum)
-  # search_interval <- range(0.75 * pt_est, 1.25 * pt_est)
-  # uniroot(findInt.LU, interval = search_interval, extendInt = "yes")$root
-  # #############################
-}
-
-# LODlimit(model = fit1, value = .5, sample_size = sample_size,
-#          inoc_levels = dat$inoculum, limit = "lower", level = 0.95,
-#          num_sim = 200L, seed = 1234
-# )
-
-##what it looks like if it fails (faster approach only)
-# my_df <- data.frame(sample_size = 25, labID = NA, inoculum = -1)
-# lme4::bootMer(fit1, FUN = function(model) {
-#        predict(model, my_df, re.form = NA, type = "response")
-# })
-
-# LODlimit(model = fit1, value = .5, sample_size = sample_size,
-#           inoc_levels = dat$inoculum, limit = "upper", level = 0.95,
-#           num_sim = 200L, seed = 1234
-# )
+#not used in v1.2.0  -----------------------------------------------------------
+# LODlimit <-
+#   function(model, value, sample_size, inoculum,
+#            limit = c("lower", "upper"), conf_level = 0.95,
+#            num_sim = 200L, seed = 1234) {
+#   # Returns the lower (or upper) confidence limit for LOD.
+#   limit <- match.arg(limit)
+#   findInt.LU <- function(x) {
+#     #returns a function whose root is the lower (or upper) CL for LOD
+#     my_df <- data.frame(sample_size = sample_size, lab_id = NA, inoculum = x)
+#     predictFUN <- function(model) {
+#       predict(model, my_df, re.form = NA, type = "response")
+#     }
+#     my_boot <- lme4::bootMer(model, FUN = predictFUN,
+#                              nsim = num_sim, seed = seed
+#     )
+#     if (limit == "lower") {
+#       my_index <- 2
+#     } else {
+#       my_index <- 1
+#     }
+#     confint(my_boot, level = conf_level)[my_index] - value
+#   }
+#
+#   #slower, but shouldn't fail
+#   # note: cannot start with 0
+#   search_interval <- range(0.001, max(inoculum) + 0.1)
+#   uniroot(findInt.LU, interval = search_interval)$root
+#
+#   # ##############################
+#   # #faster, but could fail
+#   # pt_est <- LODpoint(model, value, sample_size, inoculum)
+#   # search_interval <- range(0.75 * pt_est, 1.25 * pt_est)
+#   # uniroot(findInt.LU, interval = search_interval, extendInt = "yes")$root
+#   # #############################
+# }
+#
+# # LODlimit(model = fit1, value = .5, sample_size = sample_size,
+# #          inoc_levels = dat$inoculum, limit = "lower", level = 0.95,
+# #          num_sim = 200L, seed = 1234
+# # )
+#
+# ##what it looks like if it fails (faster approach only)
+# # my_df <- data.frame(sample_size = 25, labID = NA, inoculum = -1)
+# # lme4::bootMer(fit1, FUN = function(model) {
+# #        predict(model, my_df, re.form = NA, type = "response")
+# # })
+#
+# # LODlimit(model = fit1, value = .5, sample_size = sample_size,
+# #           inoc_levels = dat$inoculum, limit = "upper", level = 0.95,
+# #           num_sim = 200L, seed = 1234
+# # )
+#not used in v1.2.0  -----------------------------------------------------------
 
 
 
