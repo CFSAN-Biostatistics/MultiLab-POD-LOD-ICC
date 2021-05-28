@@ -30,30 +30,24 @@ server <- function(input, output, session) {
     )
   })
 
+
   output$example_data <- renderTable({
     dat_example_ui
-  },
-    striped = TRUE,
-    bordered = TRUE,
-    align = 'c'
+    }, striped = TRUE, bordered = TRUE, align = 'c'
   )
 
+
   # update number of labs & inoculum levels
-  observe({
-    input$num_labs
-    input$num_levels
-    input$use_example
-    validate(
-      need(!is.na(input$num_labs) && !is.na(input$num_levels),
-           label = "num_labs_levels"
-      )
-    )
-    my_labs <- paste0("panel_lab", 1:input$num_labs)  #wellPanels
+  observeEvent(c(input$num_labs, input$num_levels), {
+    req(input$num_labs > 0, input$num_levels > 0)
+    num_labs   <- input$num_labs
+    num_levels <- input$num_levels
+    my_labs <- glob_panel_names[1:num_labs]  #wellPanels
     # lab i, level j
     lapply(glob_panel_names, function(i) {
-      if (i %in% my_labs && !input$use_example) {
+      if (i %in% my_labs) {
         shinyjs::showElement(i)
-        my_levels  <- paste0(i, "_level", 1:input$num_levels)  #panel_lab1_level1, etc.
+        my_levels  <- paste0(i, "_level", 1:num_levels)  #panel_lab1_level1, etc.
         all_levels <- paste0(i, "_level", 1:glob_max_levels)
         lapply(all_levels, function(j) {
           if (j %in% my_levels) {
@@ -67,6 +61,7 @@ server <- function(input, output, session) {
       }
     })
   })
+
 
   #fill input data for other labs when requested
   #"lab1_inoc_level1", "lab1_ntest1", etc.
@@ -133,83 +128,12 @@ server <- function(input, output, session) {
     })
   })
 
-  # clear results when LOD or CI level inputs change
-  observeEvent(input$lod_choice, {
-    output$LOD <- renderValueBox({
-      my_lod_perc <- myLODPerc()  #"50", etc.
-      my_lod_prob <- myLODProb()  #0.5, etc.
-      valueBox(
-        subtitle = "---", color = "blue", width = 12,
-        value = withMathJax(HTML(
-          "<span style = 'font-size:60%; font-family:Courier; color:white'>",
-            paste0("LOD<sub>", my_lod_perc), "</sub>",
-          "</span>"
-        ))
-      )
-    })
-    output$LOD_LCL <- renderValueBox({
-      my_lod_perc <- myLODPerc()
-      my_lod_prob <- myLODProb()
-      valueBox(
-        subtitle = "---", color = "blue", width = 12,
-        value = withMathJax(HTML(
-          "<span style = 'font-size:60%; font-family:Courier; color:white'>",
-            paste0("LOD<sub>", my_lod_perc), "</sub>", input$conf_level, "LCL",
-          "</span>"
-        ))
-      )
-    })
-    output$LOD_UCL <- renderValueBox({
-      my_lod_perc <- myLODPerc()
-      my_lod_prob <- myLODProb()
-      valueBox(
-        subtitle = "---", color = "blue", width = 12,
-        value = withMathJax(HTML(
-          "<span style = 'font-size:60%; font-family:Courier; color:white'>",
-            paste0("LOD<sub>", my_lod_perc), "</sub>", input$conf_level, "UCL",
-          "</span>"
-        ))
-      )
-    })
-    output$POD_plots <- renderPlot({})
-  }, ignoreInit = TRUE)
-
-  observeEvent(input$conf_level, {
-    output$LOD_LCL <- renderValueBox({
-      my_lod_perc <- myLODPerc()
-      my_lod_prob <- myLODProb()
-      valueBox(
-        subtitle = "---", color = "blue", width = 12,
-        value = withMathJax(HTML(
-          "<span style = 'font-size:60%; font-family:Courier; color:white'>",
-            paste0("LOD<sub>", my_lod_perc), "</sub>", input$conf_level, "LCL",
-          "</span>"
-        ))
-      )
-    })
-    output$LOD_UCL <- renderValueBox({
-      my_lod_perc <- myLODPerc()
-      my_lod_prob <- myLODProb()
-      valueBox(
-        subtitle = "---", color = "blue", width = 12,
-        value = withMathJax(HTML(
-          "<span style = 'font-size:60%; font-family:Courier; color:white'>",
-            paste0("LOD<sub>", my_lod_perc), "</sub>", input$conf_level, "UCL",
-          "</span>"
-        ))
-      )
-    })
-    output$POD_plots <- renderPlot({})
-  }, ignoreInit = TRUE)
-
 
   # Starts "chain reaction" for calculations & caches input values
   calculate_clicked <- eventReactive(input$calculate, {
 
-    shinyWidgets::progressSweetAlert(session = session,
-      id = "progress_data", title = "Preparing data",
-      value = 0, display_pct = TRUE
-    )
+    validateDescription(input$num_labs, input$num_levels, input$sample_size,
+                        session = session)  #validate-inputs.R
 
     iter <- input$calculate + 1
     lod_unit    <- input$lod_unit
@@ -237,10 +161,6 @@ server <- function(input, output, session) {
         input[[paste0("lab", x)]]
       })
     }
-
-    shinyWidgets::updateProgressBar(session = session,
-      id = "progress_data", value = 10
-    )
 
     list(
       date_time       = strftime(Sys.time(), format = "", tz = "", usetz = TRUE),
@@ -270,93 +190,11 @@ server <- function(input, output, session) {
     use_example <- calculate_clicked()$use_example
     num_labs    <- calculate_clicked()$num_labs
     num_levels  <- calculate_clicked()$num_levels
-    description_error <- "Problem with experiment description inputs"
-    input_error       <- "Problem with lab-level input data"
-
-    shinyWidgets::updateProgressBar(session = session,
-      id = "progress_data", value = 30
-    )
-
-    desc_validate1 <- !is.na(num_labs) && is_wholenumber(num_labs)
-    desc_validate2 <- !is.na(num_levels) && is_wholenumber(num_levels)
-    if (!desc_validate1) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = description_error, type = "error",
-        text = "Number of labs must be a whole number."
-      )
-      shinyjs::disable("download_results_bttn")
-    }
-    if (!desc_validate2) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = description_error, type = "error",
-        text = "Number of levels must be a whole number."
-      )
-      shinyjs::disable("download_results_bttn")
-    }
-    validate(
-      need(try(desc_validate1 && desc_validate2),
-        "Error"
-      )
-    )
-    desc_validate3 <- num_labs <= glob_max_labs
-    desc_validate4 <- num_levels <= glob_max_levels
-    if (!desc_validate3) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = description_error, type = "error",
-        text = paste0("Maximum number of labs is ", glob_max_labs, ".")
-      )
-      shinyjs::disable("download_results_bttn")
-    }
-    if (!desc_validate4) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = description_error, type = "error",
-        text = paste0("Maximum number of levels is ", glob_max_levels, ".")
-      )
-      shinyjs::disable("download_results_bttn")
-    }
-    desc_validate5 <- num_labs   >= glob_min_labs
-    desc_validate6 <- num_levels >= glob_min_levels
-    if (!desc_validate5) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = description_error, type = "error",
-        text = paste0("Minimum number of labs is ", glob_min_labs, ".")
-      )
-      shinyjs::disable("download_results_bttn")
-    }
-    if (!desc_validate6) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = description_error, type = "error",
-        text = paste0("Minimum number of levels is ", glob_min_levels, ".")
-      )
-      shinyjs::disable("download_results_bttn")
-    }
-    validate_description <-
-      desc_validate3 && desc_validate4 && desc_validate5 && desc_validate6
-
-    validate(
-      need(try(validate_description),
-        "Error"
-      )
-    )
-
     sample_size <- calculate_clicked()$sample_size
+
     if (use_example) {
-      dat <- dat_example
+      return(dat_example)
     } else {
-      ssize_validate <-
-        !is.na(sample_size) && is.numeric(sample_size) && sample_size > 0
-      if (!ssize_validate) {
-        shinyWidgets::sendSweetAlert(session = session,
-          title = description_error, type = "error",
-          text = "Test portion size must be a positive number (without units)."
-        )
-        shinyjs::disable("download_results_bttn")
-      }
-      validate(
-        need(try(ssize_validate),
-          "Error"
-        )
-      )
       # inoculum level, number of inoculated tubes, number of positive tubes
       # "lab1_inoc_level1", "lab1_ntest1", "lab1_npos1", etc.
       lab_id   <- 1:num_labs
@@ -375,10 +213,6 @@ server <- function(input, output, session) {
       })
       ntest <- unlist(ntest)
 
-      shinyWidgets::updateProgressBar(session = session,
-        id = "progress_data", value = 50
-      )
-
       npos <- lapply(lab_id, FUN = function(i) {
         vapply(level_id, FUN.VALUE = 1, function(j) {
           input[[paste0("lab", i, "_npos", j)]]  #input$lab1_npos1, etc.
@@ -390,87 +224,11 @@ server <- function(input, output, session) {
         inoculum = inoculum, ntest = ntest, npos = npos,
         sample_size = sample_size
       )
+      validateData(dat, session = session)
+      return(dat)
     }
-
-    shinyWidgets::updateProgressBar(session = session,
-      id = "progress_data", value = 60
-    )
-
-    sum_data <- aggregate(dat, by = list(dat$lab_id), FUN = sum)
-    input_validate1 <- all(!is.na(dat))
-    input_validate2 <- all(dat >= 0)
-    input_validate3 <- all(sum_data$inoculum > 0)  #each lab has >=1 positive level
-    input_validate4 <- all(dat$ntest > 0)
-    input_validate5a <- all(sum_data$npos > 0)
-    input_validate5b <- all(sum_data$ntest - sum_data$npos > 0)
-    input_validate6 <- all(dat$ntest >= dat$npos)
-    input_validate7 <-
-      all(is_wholenumber(dat$ntest)) && all(is_wholenumber(dat$npos))
-
-    shinyWidgets::updateProgressBar(session = session,
-      id = "progress_data", value = 80
-    )
-
-    if (!input_validate1) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = input_error, type = "error",
-        text = "Some data are missing or non-numeric."
-      )
-      shinyjs::disable("download_results_bttn")
-    } else if (!input_validate2) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = input_error, type = "error",
-        text = "All data must be non-negative."
-      )
-      shinyjs::disable("download_results_bttn")
-    } else if (!input_validate3) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = input_error, type = "error",
-        text = "Each lab must have at least 1 positive inoculum level."
-      )
-      shinyjs::disable("download_results_bttn")
-    } else if (!input_validate4) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = input_error, type = "error",
-        text = "Each inoculation level must have at least 1 tube inoculated."
-      )
-      shinyjs::disable("download_results_bttn")
-    } else if (!input_validate5a) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = input_error, type = "error",
-        text = "Each lab must have at least 1 positive tube."
-      )
-      shinyjs::disable("download_results_bttn")
-    } else if (!input_validate5b) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = input_error, type = "error",
-        text = "Each lab must have at least 1 negative tube."
-      )
-      shinyjs::disable("download_results_bttn")
-    } else if (!input_validate6) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = input_error, type = "error",
-        text = "Tubes inoculated must always be >= tubes positive."
-      )
-      shinyjs::disable("download_results_bttn")
-    } else if (!input_validate7) {
-      shinyWidgets::sendSweetAlert(session = session,
-        title = input_error, type = "error",
-        text = "Tubes inoculated and tubes positive must be whole numbers."
-      )
-      shinyjs::disable("download_results_bttn")
-    }
-    validate_inputs <-
-      input_validate1 && input_validate2 && input_validate3 &&
-         input_validate4 && input_validate5a && input_validate5b &&
-         input_validate6 && input_validate7
-    validate(
-      need(try(validate_inputs),
-        "Error"
-      )
-    )
-    dat
   })
+
 
   ######################  end of data set creation  ############################
 
@@ -479,128 +237,51 @@ server <- function(input, output, session) {
 
     #https://www.gitmemory.com/issue/dreamRs/shinyWidgets/301/662290306
     shinyjs::disable("download_results_bttn")
-    # updateTabItems(session = session, inputId = "my_tabs", selected = "results")
     dat <- dat()
     dat_no_zeroes <- dat[dat$inoculum != 0, ]
-    fit1 <- NA
-    # Step 1: catch errors and warnings
-    tst_glmer1 <- tryCatch(
-      lme4::glmer(cbind(npos, ntest - npos) ~
-          offset(log(sample_size)) + offset(log(inoculum)) + (1 | lab_id),
-        data = dat_no_zeroes, family = binomial(link = cloglog),
-        control = lme4::glmerControl(optimizer = "bobyqa"), nAGQ = 21
-      ),
-      error = function(e) e,
-      warning = function(w) w
-    )
-    error_glmer1   <- ifelse(is(tst_glmer1, "error"), 1, 0)    # 1 = error
-    warning_glmer1 <- ifelse(is(tst_glmer1, "warning"), 1, 0)  # 1 = warning
-    error_glmer2   <- 0
-    warning_glmer2 <- 0
-    if (error_glmer1 == 0 && warning_glmer1 == 0) {
-      tst_glmer2 <- tryCatch(
-        summary(
-          tst_glmer1
-        ),
-        error = function(e) e,
-        warning = function(w) w
-      )
-      error_glmer2   <- ifelse(is(tst_glmer2, "error"), 1, 0)    # 1 = error
-      warning_glmer2 <- ifelse(is(tst_glmer2, "warning"), 1, 0)  # 1 = warning
-    }
-    use.glmer  <- 1
-    model_type <- "random intercept"
-    if (error_glmer1 || warning_glmer1 || error_glmer2 || warning_glmer2) {
-      use.glmer <- 0
-      model_type <- "fixed effects"
-    }
+    warning_messages_results_UI   <- ""
+    warning_messages_results_xlsx <- ""
 
-    # ##################  for testing only  ######################################
-    # use.glmer <- 0
-    # model_type <- "fixed effects"
+    # Step 1: Choose model - catch errors and warnings
+    model_type <- chooseModel(dat_no_zeroes)  #random intercept or fixed effects?
 
-    # if (input$choose_model == "fixed effects") {
-    #   use.glmer <- 0
-    #   model_type <- "fixed effects"
-    # } else if (input$choose_model == "random intercept") {
-    #   use.glmer <- 1
-    # }
-    # ############################################################################
-
-    shinyWidgets::updateProgressBar(session = session,
-      id = "progress_data", value = 100
-    )
-    shinyWidgets::closeSweetAlert(session = session)
+    #message(model_type); model_type <- "fixed effects"  #for testing only
 
     # Step 2: fit model
-    if (use.glmer == 1) {
-
+    if (model_type == "random intercept") {
       shinyWidgets::progressSweetAlert(session = session,
         id = "progress_alert", title = "Fitting random intercept model",
         value = 0, display_pct = TRUE
       )
-      # GHQ
-      fit1 <- lme4::glmer(cbind(npos, ntest - npos) ~
-          offset(log(sample_size)) + offset(log(inoculum)) + (1 | lab_id),
-        data = dat_no_zeroes, family = binomial(link = cloglog),
-        control = lme4::glmerControl(optimizer = "bobyqa"), nAGQ = 20
-      )
-      ##################
-      ## fixed effect ##
-      ##################
-      summary_fit1 <- summary(fit1)
-      coef_fit1    <- coef(summary_fit1)
-      mu_log       <- coef_fit1["(Intercept)", "Estimate"]    #log mean effect
-      sd.mu_log    <- coef_fit1["(Intercept)", "Std. Error"]  #SE of log mean effect
-      mu           <- exp(mu_log)                             #mean effect
-      ######################################
-      ## random effect standard deviation ##
-      ######################################
-      if (as.numeric(summary_fit1$varcor) < 0) {
-        sigma <- NA
-      } else {
-        sigma <- sqrt(as.numeric(summary_fit1$varcor))  #SD of log lab effects
-      }
-      ###################
-      ## calculate ICC ##
-      ###################
-      vc <- lme4::VarCorr(fit1)  ## default print method: standard dev and corr
-      ## both variance and std.dev.
-      #print(vc,comp=c("Variance","Std.Dev."))
-      vc2 <- as.data.frame(vc)
-      var.between <- var.lab <- vc2[1, "vcov"]
-      var.within  <- var.residual <- (pi ^ 2) / 6
-      var.total   <- var.between + var.within
-      ICC <- var.between / var.total
-    }  #end of use.glmer == 1
-
-    warning_messages_results_UI   <- ""
-    warning_messages_results_xlsx <- ""
-
-    if (use.glmer == 0) {
-
+      model_fitted <- fitRandomIntercept(dat_no_zeroes)
+      mu        <- model_fitted$mu
+      mu_log    <- model_fitted$mu_log
+      mu_log_se <- model_fitted$mu_log_se
+      sigma     <- model_fitted$sigma
+      ICC       <- model_fitted$ICC
+    } else if (model_type == "fixed effects") {
       # Alternative method when the first method fails: use glm.
       #   No random effects are estimated.
       shinyWidgets::progressSweetAlert(session = session,
-        id = "progress_alert",
-        title = "Fitting fixed effects model",
+        id = "progress_alert", title = "Fitting fixed effects model",
         value = 0, display_pct = TRUE
       )
       shinyalert::shinyalert(
         title = "Warning",
-        text = paste(
-          "A random intercept model cannot be used for this data.<br>",
-          "A model with only <em>fixed effects</em> is used instead."
-        ),
-        html = TRUE, type = "warning", timer = 0
+        text = span(HTML(
+          "A random intercept model cannot be used for this data.",
+          "A model with only <em>fixed effects</em> is used instead.",
+        ), class = "alert-text"),
+        html = TRUE, type = "warning", timer = 0,
+        confirmButtonCol = "#003152"
       )
       warning_messages_results_UI <- paste0(
         "<br><strong>Warnings: </strong><br>",
         "<ul>",
-          "<li>",
-            "A random intercept model cannot be used for this data. ",
-            "A model with only <em>fixed effects</em> is used instead.",
-          "</li>"
+        "<li>",
+        "A random intercept model cannot be used for this data. ",
+        "A model with only <em>fixed effects</em> is used instead.",
+        "</li>"
       )
       warning_messages_results_xlsx <- c(
         "",
@@ -618,9 +299,20 @@ server <- function(input, output, session) {
         error = function(e) e,
         warning = function(w) w
       )
-      error_glm   <- ifelse(is(tst_glm, "error"), 1, 0)    # 1 = error
-      warning_glm <- ifelse(is(tst_glm, "warning"), 1, 0)  # 1 = warning
-      if (error_glm || warning_glm) {
+      error_glm   <- methods::is(tst_glm, "error")
+      warning_glm <- methods::is(tst_glm, "warning")
+      problem_glm <- error_glm || warning_glm
+      if (problem_glm) {
+        shinyalert::shinyalert(
+          title = "Warning",
+          text = span(HTML(
+            "POD and LOD estimates may be inaccurate because of a lack of ",
+            "variation in the outcome or an issue with the model."
+          ), class = "alert-text"),
+          html = TRUE,
+          type = "warning", timer = 0,
+          confirmButtonCol = "#003152"
+        )
         warning_messages_results_UI <- paste0(
           warning_messages_results_UI,
           "<li>",
@@ -635,27 +327,12 @@ server <- function(input, output, session) {
             "lack of variation in the outcome or an issue with the model."
           )
         )
-        shinyalert::shinyalert(
-          title = "Warning",
-          text = paste0(
-            "POD and LOD estimates may be inaccurate because of a lack of ",
-            "variation in the outcome or an issue with the model."
-          ),
-          type = "warning", timer = 0
-        )
       }
-      # no random effects
-      fit1 <- stats::glm(cbind(npos, ntest - npos) ~
-          offset(log(sample_size)) + offset(log(inoculum)),
-        data = dat_no_zeroes, family = binomial(link = cloglog)
-      )
-      # fixed effect
-      summary_fit1 <- summary(fit1)
-      coef_fit1    <- coef(summary_fit1)
-      mu_log       <- coef_fit1[1]  #log mean effect
-      sd.mu_log    <- coef_fit1[2]  #SE of log mean effect
-      mu           <- exp(mu_log)   #mean effect
-      # lme4::lmer() (i.e., LMM) for ICC only
+      model_fitted <- fitFixedEffects(dat_no_zeroes)
+      mu        <- model_fitted$mu
+      mu_log    <- model_fitted$mu_log
+      mu_log_se <- model_fitted$mu_log_se
+      # Attempt to use LMM to estimate ICC
       # Un-grouping the data (1 row per test tube)
       y1 <- data.frame(
         lapply(dat, function(x) rep(x, dat$npos)),
@@ -668,40 +345,18 @@ server <- function(input, output, session) {
       )
       y0 <- y0[, c("lab_id", "inoculum", "y")]
       my_linear_data <- rbind(y1, y0)
-      tst_lmer1 = tryCatch(
-        lme4::lmer(y ~ (1 | lab_id) + inoculum,
-          data = my_linear_data, REML = TRUE,
-          control = lme4::lmerControl(
-            check.conv.singular = lme4::.makeCC(
-              action = "ignore", tol = 1e-4
-            )
-          )
-        ),
-        error = function(e) e,
-        warning = function(w) w
-      )
-      error_lmer1   <- ifelse(is(tst_lmer1, "error"), 1, 0)  # 1 = error
-      warning_lmer1 <- ifelse(is(tst_lmer1, "warning"), 1, 0)
-      error_lmer2   <- 0
-      warning_lmer2 <- 0
-      if (error_lmer1 == 0 && warning_lmer1 == 0) {
-        tst_lmer2 <- tryCatch(
-          summary(tst_lmer1),
-          error = function(e) e,
-          warning = function(w) w
-        )
-        error_lmer2   <- ifelse(is(tst_lmer2, "error"), 1, 0)  # 1 = error
-        warning_lmer2 <- ifelse(is(tst_lmer2, "warning"), 1, 0)
-      }
-      #if (FALSE) {   #to force ANCOVA estimate for testing
-      if (!(error_lmer1 || warning_lmer1 || error_lmer2 || warning_lmer2)) {
-        # LMM approach for ICC only
+      icc_method <- chooseFixedMethodICC(my_linear_data)
+
+      #message(icc_method); icc_method <- "ANCOVA"  #for testing only
+
+      if (icc_method == "LMM") {
         shinyalert::shinyalert(
           title = "Warning",
-          text = "ICC is calculated based on a <em>linear mixed effects</em> model.",
-          html = TRUE,
-          type = "warning",
-          timer = 0
+          text = span(HTML(
+            "ICC is calculated based on a <em>linear mixed effects</em> model."
+          ), class = "alert-text"),
+          html = TRUE, type = "warning", timer = 0,
+          confirmButtonCol = "#003152"
         )
         warning_messages_results_UI <- paste0(
           warning_messages_results_UI,
@@ -713,31 +368,16 @@ server <- function(input, output, session) {
           warning_messages_results_xlsx,
           "ICC is calculated based on a linear mixed effects model."
         )
-        fit_lmer <- lme4::lmer(y ~ (1 | lab_id) + inoculum,
-          data = my_linear_data, REML = TRUE,
-          control = lme4::lmerControl(
-            check.conv.singular = lme4::.makeCC(
-              action = "ignore", tol = 1e-4
-            )
-          )
-        )
-        vc <- lme4::VarCorr(fit_lmer)
-        vc <- as.data.frame(vc)
-        var_between <- vc[vc$grp == "lab_id", "vcov"]
-        var_within  <- vc[vc$grp == "Residual", "vcov"]
-        var_total   <- var_between + var_within
-        ICC <- var_between / var_total
-        if (var_between < 0) {
-          sigma <- NA
-        } else {
-          sigma <- sqrt(var_between)  #SD of log lab effects (random effects distribution)
-        }
-      } else {
-        # ANCOVA approach for ICC when LMM fails
+        icc_sigma <- iccSigmaLmm(my_linear_data)
+
+      } else if (icc_method == "ANCOVA") {
         shinyalert::shinyalert(
           title = "Warning",
-          text = "ICC is calculated using an <em>analysis of covariance</em> approach.",
-          html = TRUE, type = "warning", timer = 0
+          text = span(HTML(
+            "ICC is calculated using an <em>analysis of covariance</em> approach."
+          ), class = "alert-text"),
+          html = TRUE, type = "warning", timer = 0,
+          confirmButtonCol = "#003152"
         )
         warning_messages_results_UI <- paste0(
           warning_messages_results_UI,
@@ -749,87 +389,71 @@ server <- function(input, output, session) {
           warning_messages_results_xlsx,
           "ICC is calculated using an analysis of covariance approach."
         )
-        # use the method in Stanish and Taylor (1983)
-        fit_lm <- stats::lm(
-          y ~ as.factor(lab_id) + I(inoculum - mean(inoculum)),
-          data = my_linear_data
-        )
-        n_labs <- length(unique(dat$lab_id))
-        ns <- aggregate(
-          y ~ as.factor(lab_id), data = my_linear_data,
-          FUN = length
-        )[, "y"]
-        n0 <- (1 / (n_labs - 1)) * (sum(ns) - sum(ns ^ 2) / sum(ns))
-        grand_mean_inoculum <- mean(my_linear_data$inoculum)
-        data_inoculum_lab <- aggregate(
-          inoculum ~ lab_id, data = my_linear_data,
-          FUN = mean
-        )
-        colnames(data_inoculum_lab)[2] <- "mean_inoculum"
-        numer <- sum(ns ^ 2 * (data_inoculum_lab$mean_inoculum - grand_mean_inoculum) ^ 2)
-        denom <- sum((my_linear_data$y - grand_mean_inoculum) ^ 2)
-        n01 <- (1 / (n_labs - 1)) * ((n_labs - 1) * n0 - (numer / denom))  #Eq 2.4
-        fit_anova   <- anova(fit_lm)
-        var_within  <- fit_anova$"Mean Sq"[3]  #MS Residuals
-        MS_labs     <- fit_anova$"Mean Sq"[1]  #MS Labs
-        var_between <- (MS_labs - var_within) / n01
-        var_total   <- var_within + var_between
-        ICC         <- var_between / var_total
-        if (var_between < 0) {
-          sigma <- NA
-        } else {
-          sigma <- sqrt(var_between)  #SD of log lab effects (random effects distribution)
-        }
-      }  #end of ANCOVA
-    }  #end of use.glmer == 0
+        icc_sigma <- iccSigmaAncova(my_linear_data)
 
+      } else {
+        stop("Problem with 'icc_method'.")
+      }
+      sigma <- icc_sigma$sigma
+      ICC   <- icc_sigma$ICC
+    } else {
+      stop("Problem with 'model_type'.")
+    }
     mu_char        <- formatC(mu, digits = 3, format = "f")
     mu_log_char    <- formatC(mu_log, digits = 3, format = "f")
-    sd.mu_log_char <- formatC(sd.mu_log, digits = 3, format = "f")
-    if (is.na(ICC)) {
-      ICC_char <- "N/A"
-    } else {
-      ICC_char <- formatC(ICC, digits = 3, format = "f")
-    }
+    mu_log_se_char <- formatC(mu_log_se, digits = 3, format = "f")
     if (is.na(sigma)) {
       sigma_char <- "N/A"
     } else {
       sigma_char <- formatC(sigma, digits = 3, format = "f")
     }
+    if (is.na(ICC)) {
+      ICC_char <- "N/A"
+    } else {
+      ICC_char <- formatC(ICC, digits = 3, format = "f")
+    }
     output$warning_messages_results_UI <- renderUI({
-      tags$p(div(HTML(
-        "<span style = 'font-size:150%; color:red'>",
-        warning_messages_results_UI,
-        "</ul>"
-      )))
+      tags$p(div(
+        class = "warning",
+        HTML(
+          "<span>",
+          warning_messages_results_UI,
+          "</ul>"
+        )
+      ))
     })
     list(
-      dat_no_zeroes = dat_no_zeroes, model_type = model_type, fit1 = fit1,
+      dat_no_zeroes = dat_no_zeroes,
+      model_type = model_type, model_fitted = model_fitted$fit,
       warning_messages_results_xlsx = warning_messages_results_xlsx,
       mu = mu, mu_char = mu_char,
       mu_log = mu_log, mu_log_char = mu_log_char,
-      sd.mu_log = sd.mu_log, sd.mu_log_char = sd.mu_log_char,
+      mu_log_se = mu_log_se, mu_log_se_char = mu_log_se_char,
       sigma = sigma, sigma_char = sigma_char,
       ICC = ICC, ICC_char = ICC_char
     )
   })
+
   ######################  end of model fitting  ################################
 
 
   POD_LOD <- eventReactive(model_fit(), {
     dat <- dat()
     inoc_levels <- sort(unique(dat$inoculum))
+    inoc_max    <- max(inoc_levels)
     sample_size     <- calculate_clicked()$sample_size
     lod_unit        <- calculate_clicked()$lod_unit
     lod_prob        <- calculate_clicked()$lod_prob
     conf_level_prob <- calculate_clicked()$conf_level_prob
+    num_labs        <- calculate_clicked()$num_labs
     lab_names       <- calculate_clicked()$lab_names
-    my_alpha        <- 1 - conf_level_prob
+    lab_ids  <- unique(dat$lab_id)
+    my_alpha <- 1 - conf_level_prob
     dat_no_zeroes <- model_fit()$dat_no_zeroes
     model_type    <- model_fit()$model_type
-    fit1          <- model_fit()$fit1
+    fit1          <- model_fit()$model_fitted
     mu            <- model_fit()$mu
-    sd.mu_log     <- model_fit()$sd.mu_log
+    mu_log_se     <- model_fit()$mu_log_se
 
     shinyWidgets::updateProgressBar(session = session,
       id = "progress_alert", value = 10
@@ -850,7 +474,7 @@ server <- function(input, output, session) {
         labID            = dd$grp,
         lab_names        = lab_names,
         estimated.effect = lme4::fixef(fit1)[['(Intercept)']] + dd$condval,
-        SE               = sqrt(sd.mu_log ^ 2 + dd$condsd ^ 2)
+        SE               = sqrt(mu_log_se ^ 2 + dd$condsd ^ 2)
       )
       ###############
       ## find d0.5 ##
@@ -864,33 +488,27 @@ server <- function(input, output, session) {
         error = function(e) e,
         warning = function(w) w
       )
-      is_LOD_error <- is(tst_LOD, "error")
+      is_LOD_error <- methods::is(tst_LOD, "error")
       if (is_LOD_error) {
         shinyWidgets::sendSweetAlert(session = session,
           title = "LOD Calculation Error", type = "error",
           text = "Possibly due to zero-probability predictions."
         )
       }
-      validate(
-        need(try(!is_LOD_error),
-          "LOD Error"
-        )
-      )
+      req(!is_LOD_error)
       LOD <- LODpoint(model = fit1, value = lod_prob,
         sample_size = sample_size, inoculum = dat$inoculum
       )
-
       shinyWidgets::updateProgressBar(session = session,
         id = "progress_alert", value = 40
       )
-
       ############################################################
       ## POD for each lab (i.e., include RE).                   ##
       ## 95% confidence interval for each lab was not estimated ##
       ############################################################
-      ds <- c(LOD, seq(from = 1e-9, to = max(dat$inoculum), by = 1e-3))
+      ds <- c(LOD, seq(from = 1e-9, to = inoc_max, by = 1e-3))
       ds <- sort(unique(ds))
-      newdata <- expand.grid(lab_id = unique(dat$lab_id), inoculum = ds)
+      newdata <- expand.grid(lab_id = lab_ids, inoculum = ds)
       newdata <- data.frame(sample_size = sample_size, newdata)
       df.predicted1 <- newdata  #for individual lab PODs
       predict.fun1 <- function(model) {
@@ -902,7 +520,7 @@ server <- function(input, output, session) {
       #####################################
       ## population level POD and 95% CI ##
       #####################################
-      ds <- c(1e-9, LOD, seq(from = min(1e-4, LOD), to = max(dat$inoculum), by = 1e-5))
+      ds <- c(1e-9, LOD, seq(from = min(1e-4, LOD), to = inoc_max, by = 1e-5))
       ds <- sort(unique(ds))
       df.predicted <- data.frame(
         sample_size = sample_size, lab_id = NA, inoculum = ds
@@ -972,7 +590,7 @@ server <- function(input, output, session) {
       summary_fit2 <- summary(fit2)
       coef_fit2    <- coef(summary_fit2)
       lab_effects <- data.frame(
-        labID            = unique(dat_no_zeroes$lab_id),
+        labID            = lab_ids,
         lab_names        = lab_names,
         estimated.effect = as.numeric(coef_fit2[, "Estimate"]),
         SE               = as.numeric(coef_fit2[, "Std. Error"])
@@ -987,21 +605,21 @@ server <- function(input, output, session) {
       ## Estimate LOD50 (d0.5) and CI ##
       ##################################
       # equations (32), (33) from Jarvis et al. 2019
-      my_df <- length(unique(dat_no_zeroes$lab_id)) - 1
+      my_df <- num_labs - 1
       t_critval <- qt(p = 1 - (my_alpha / 2), df = my_df)
       LOD <- -log(1 - lod_prob) / (sample_size * mu)
-      exp_t_sd.mu <- exp(t_critval * sd.mu_log)
-      LOD.U <- LOD * exp_t_sd.mu
-      LOD.L <- LOD / exp_t_sd.mu
+      exp_t_mu_log_se <- exp(t_critval * mu_log_se)
+      LOD.U <- LOD * exp_t_mu_log_se
+      LOD.L <- LOD / exp_t_mu_log_se
 
       #########################
       ## Estimate POD and CI
       #########################
       # POD for each lab
       # confidence interval for each lab was not estimated
-      ds <- c(LOD, seq(from = 1e-9, to = max(dat$inoculum), by = 1e-3))
+      ds <- c(LOD, seq(from = 1e-9, to = inoc_max, by = 1e-3))
       ds <- sort(unique(ds))
-      newdata <- expand.grid(lab_id = unique(dat$lab_id), inoculum = ds)
+      newdata <- expand.grid(lab_id = lab_ids, inoculum = ds)
       newdata <- data.frame(sample_size = sample_size, newdata)
       df.predicted1 <- newdata  #for each lab
       predict.fun <- function(model) {
@@ -1012,7 +630,7 @@ server <- function(input, output, session) {
       ################################
       # population level POD and CI
       ################################
-      ds <- c(LOD, seq(from = 1e-9, to = max(dat$inoculum), by = 1e-4))
+      ds <- c(LOD, seq(from = 1e-9, to = inoc_max, by = 1e-4))
       ds <- sort(unique(ds))
       df.predicted <- data.frame(
         sample_size = sample_size, lab_id = NA, inoculum = ds
@@ -1045,7 +663,7 @@ server <- function(input, output, session) {
     LOD.U_char <- formatC(LOD.U, digits = 3, format = "f")
     list(
       df.predicted = df.predicted, df.predicted1 = df.predicted1,
-      lab_effects = lab_effects, inoc_levels = inoc_levels,
+      lab_effects = lab_effects, inoc_levels = inoc_levels, inoc_max = inoc_max,
       LOD = LOD, LOD.L = LOD.L, LOD.U = LOD.U,
       LOD_char = LOD_char, LOD.L_char = LOD.L_char, LOD.U_char = LOD.U_char
     )
@@ -1058,107 +676,88 @@ server <- function(input, output, session) {
 
   observeEvent(POD_LOD(), {
 
-    # shinyjs::delay(2000, {
-    #   updateTabItems(session = session, inputId = "my_tabs", selected = "results")
-    #   shinyjs::delay(3000,
-    #     shinyjs::enable("download_results_bttn")
-    #   )
-    # })
-
     output$log_mean_effect <- renderValueBox({
       valueBox(
-        value = withMathJax(HTML(
-          "<span style = 'font-size:55%; font-family:Courier; color:white'>",
-            paste0("Mean Lab Effect \\((", "\\widehat{\\mu}", "\\))"),
+        value = glob_log_mean_effect_desc,
+        subtitle = HTML(
+          "<span class='parameter-estimates-value'>",
+            model_fit()$mu_log_char,
           "</span>"
-        )),
-        subtitle = tags$p(HTML(
-          "<span style = 'font-size:150%; font-family:Courier; color:white'>",
-            "<strong>", model_fit()$mu_log_char, "</strong>",
-          "</span>"
-        )),
+        ),
         width = 12, icon = NULL, color = "navy"
       )
     })
 
     output$se_log_mean_effect <- renderValueBox({
       valueBox(
-        value = withMathJax(HTML(
-          "<span style = 'font-size:54%; font-family:Courier; color:white'>",
-            "SE of Mean Lab Effect",
+        value = glob_se_log_mean_effect_desc,
+        subtitle = HTML(
+          "<span class='parameter-estimates-value'>",
+            model_fit()$mu_log_se_char,
           "</span>"
-        )),
-        subtitle = tags$p(HTML(
-          "<span style = 'font-size:150%; font-family:Courier; color:white'>",
-            "<strong>", model_fit()$sd.mu_log_char, "</strong>",
-           "</span>"
-        )),
+        ),
         width = 12, icon = NULL, color = "navy"
       )
     })
 
     output$ICC <- renderValueBox({
       valueBox(
-        value = withMathJax(HTML(
-          "<span style = 'font-size:60%; font-family:Courier; color:white'>",
-            "ICC",
+        value = glob_ICC_desc,
+        subtitle = HTML(
+          "<span class='parameter-estimates-value'>",
+            model_fit()$ICC_char,
           "</span>"
-        )),
-        subtitle = tags$p(HTML(
-          "<span style = 'font-size:150%; font-family:Courier; color:white'>",
-            "<strong>", model_fit()$ICC_char, "</strong>",
-          "</span>"
-        )),
+        ),
         width = 12, icon = NULL, color = "maroon"
       )
     })
 
     output$LOD <- renderValueBox({
       valueBox(
-        value = withMathJax(HTML(
-          "<span style = 'font-size:60%; font-family:Courier; color:white'>",
+        value = HTML(
+          "<span class='lod-estimates-description'>",
             paste0("LOD<sub>", calculate_clicked()$lod_perc, "</sub>"),
           "</span>"
-        )),
-        subtitle = tags$p(HTML(
-          "<span style = 'font-size:150%; font-family:Courier; color:white'>",
-            "<strong>", POD_LOD()$LOD_char, "</strong>",
+        ),
+        subtitle = HTML(
+          "<span class='lod-estimates-value'>",
+            POD_LOD()$LOD_char,
           "</span>"
-        )),
+        ),
         width = 12, icon = NULL, color = "blue"
       )
     })
 
     output$LOD_LCL <- renderValueBox({
       valueBox(
-        value = withMathJax(HTML(
-          "<span style = 'font-size:60%; font-family:Courier; color:white'>",
-            paste0("LOD<sub>", calculate_clicked()$lod_perc), "</sub>",
+        value = HTML(
+          "<span class='lod-estimates-description'>",
+            paste0("LOD<sub>", calculate_clicked()$lod_perc, "</sub>"),
             calculate_clicked()$conf_level, "LCL",
           "</span>"
-        )),
-        subtitle = tags$p(HTML(
-          "<span style = 'font-size:150%; font-family:Courier; color:white'>",
-            "<strong>", POD_LOD()$LOD.L_char, "</strong>",
+        ),
+        subtitle = HTML(
+          "<span class='lod-estimates-value'>",
+            POD_LOD()$LOD.L_char,
           "</span>"
-        )),
+        ),
         width = 12, icon = NULL, color = "blue"
       )
     })
 
     output$LOD_UCL <- renderValueBox({
       valueBox(
-        value = withMathJax(HTML(
-          "<span style = 'font-size:60%; font-family:Courier; color:white'>",
-            paste0("LOD<sub>", calculate_clicked()$lod_perc), "</sub>",
+        value = HTML(
+          "<span class='lod-estimates-description'>",
+            paste0("LOD<sub>", calculate_clicked()$lod_perc, "</sub>"),
             calculate_clicked()$conf_level, "UCL",
           "</span>"
-        )),
-        subtitle = tags$p(HTML(
-          "<span style = 'font-size:150%; font-family:Courier; color:white'>",
-            "<strong>", POD_LOD()$LOD.U_char, "</strong>",
+        ),
+        subtitle = HTML(
+          "<span class='lod-estimates-value'>",
+            POD_LOD()$LOD.U_char,
           "</span>"
-        )),
+        ),
         width = 12, icon = NULL, color = "blue"
       )
     })
@@ -1168,15 +767,14 @@ server <- function(input, output, session) {
 
 
   plotCurves <- eventReactive(POD_LOD(), {
-
-    inoc_levels <- POD_LOD()$inoc_levels
-    inoc_max <- max(inoc_levels)
     sample_size <- calculate_clicked()$sample_size
     lod_unit    <- calculate_clicked()$lod_unit
     conf_level  <- calculate_clicked()$conf_level
     lod_choice  <- calculate_clicked()$lod_choice
     lod_prob    <- calculate_clicked()$lod_prob
     lod_perc    <- calculate_clicked()$lod_perc
+    inoc_levels   <- POD_LOD()$inoc_levels
+    inoc_max      <- POD_LOD()$inoc_max
     df.predicted  <- POD_LOD()$df.predicted
     df.predicted1 <- POD_LOD()$df.predicted1
     LOD           <- POD_LOD()$LOD
@@ -1264,7 +862,7 @@ server <- function(input, output, session) {
         label = paste(lod_choice, "= ", LOD_rounded),
         size = rel(5), angle = 90
       ) +
-      annotate("label", x = 0.75 * max(dat$inoculum), y = 0.375,
+      annotate("label", x = 0.75 * inoc_max, y = 0.375,
         label = my_label, parse = TRUE,
         size = rel(8), color = "red", fontface = "bold",
         label.padding = unit(0.75, "lines"),
@@ -1320,7 +918,7 @@ server <- function(input, output, session) {
     output$POD_plots <- renderPlot({
       plotCurves()
     })
-    shinyjs::delay(2000, {
+    shinyjs::delay(1000, {
       updateTabItems(session = session, inputId = "my_tabs", selected = "results")
       shinyjs::delay(3000,
         shinyjs::enable("download_results_bttn")
@@ -1331,7 +929,11 @@ server <- function(input, output, session) {
     )
     shinyWidgets::closeSweetAlert(session = session)
     shinyWidgets::sendSweetAlert(session = session,
-      title = "Calculations complete", type = "success"
+      title = "Calculations complete!", type = "success",
+      text = span(HTML(
+        "Results will be loaded momentarily."
+      ), class = "alert-text"),
+      btn_colors = "#003152"
     )
   })
 
@@ -1348,7 +950,8 @@ server <- function(input, output, session) {
     content = function(file) {
       shinybusy::show_modal_spinner(
         spin = "double-bounce", color = "#112446",
-        text = "Creating your report...", session = session
+        text = span("Creating your report...", class = "creating-report"),
+        session = session
       )
       on.exit(
         shinybusy::remove_modal_spinner(session = session),
@@ -1422,7 +1025,7 @@ server <- function(input, output, session) {
       my_results <-
         c("RESULTS/",
           paste0("Mean Lab Effect:  ",       model_fit()$mu_log_char),
-          paste0("SE of Mean Lab Effect:  ", model_fit()$sd.mu_log_char),
+          paste0("SE of Mean Lab Effect:  ", model_fit()$mu_log_se_char),
           paste0("ICC:  ",                   model_fit()$ICC_char),
           paste0("Standard Deviation of Lab Effects:  ", model_fit()$sigma_char),
           paste0(calc$lod_choice, ":  ",               POD_LOD()$LOD_char),

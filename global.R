@@ -40,20 +40,23 @@ library(sessioninfo)
 library(dplyr)
 
 source("helpers.R")
+source("helpers-model.R")
+source("validate-inputs.R")
 
 #global variables
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.2.1"
+glob_app_version <- "v1.3.0"
 
 glob_min_labs     <- 2L
 glob_max_labs     <- 30L
+#glob_max_labs <- 3  #for testing only!!!
 glob_default_labs <- 2L
 glob_panel_names  <- paste0("panel_lab", 1:glob_max_labs)  #see singleWellPanel()
 
 glob_min_levels <- 3L
-glob_max_levels <- 12L  #to speed up loading of app
-# glob_max_levels <- 3  #for testing!!!
-# glob_max_labs <- 3  #for testing!!!
+glob_max_levels <- 12L
+#glob_max_levels <- 3  #for testing only!!!
+
 glob_default_levels <- 3L
 
 glob_min_size     <- 0
@@ -61,11 +64,20 @@ glob_default_size <- 25  #Sample (test portion) size in g or ml
 
 glob_plot_aspect_ratio <- 0.45
 
-#global styles
-glob_style_fill_labs <-
-  paste("color:white; background-color:grey; border-color:black;",
-    "margin-top:20px"
-  )
+
+glob_log_mean_effect_desc <- span(
+  withMathJax(HTML("Mean Lab Effect \\((\\widehat{\\mu}\\))")),
+  class = 'parameter-estimates-description'
+)
+glob_se_log_mean_effect_desc <- span(
+  HTML("SE of Mean Lab Effect"),
+  class = 'parameter-estimates-description'
+)
+glob_ICC_desc <- span(
+  HTML("ICC"),
+  class = 'parameter-estimates-description'
+)
+
 
 # Example data -----------------------------------------------------------------
 d  <- c(0, 0.04, 0.08, 0.16, 0.32)  #inoculation level (CFU/mL)

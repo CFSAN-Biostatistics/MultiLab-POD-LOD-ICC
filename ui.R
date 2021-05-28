@@ -39,34 +39,17 @@ my_sidebar <- sidebarMenu(
     )
   ),
   hr(),
-  # # -----------------------------  for testing only  ---------------------------
-  # fluidRow(
-  #   column(width = 1),
-  #   column(width = 10, align = "left",
-  #     selectInput("choose_model", label = "For app development only...",
-  #       width = "100%",
-  #       choices = c("prefer random intercept", "fixed effects", "random intercept"),
-  #       selected = "prefer random intercept"
-  #     )
-  #   )
-  # ),
-  # hr(),
-  # # ----------------------------------------------------------------------------
   h4(em("Authors: "), "S. Wang, J. Ihrie", align = "center"),
   h4(em("App version: "), glob_app_version, align = "center"),
   hr(),
-  em(
-    h5("Please send suggestions or bug reports to", align = "center"),
-    h5(
-      a("John.Ihrie@fda.hhs.gov",
-        href = paste0(
-          "mailto:John.Ihrie@fda.hhs.gov",
-          "?subject=", glob_app_title, " bug/suggestion"
-        )
-      ), align = "center"
-    )
+  div(
+    id = "mail_to",
+    "Please",
+    a("email John Ihrie",
+      href = "mailto:John.Ihrie@fda.hhs.gov", class = "email-link"
+    ),
+    "with suggestions or bug reports."
   )
-
 )
 
 
@@ -81,91 +64,66 @@ my_calculator <- tabItem(
     column(width = 8, align = "center",
 
       wellPanel(
-        style = "color:white; background:midnightblue; border-color:black; border-width:3px",
+        id = "experiment_description",
         h3(strong("Experiment Description")),
         br(),
-        tags$style(
-          #placeholder fonts
-          "#exp_name::placeholder {color:dimgrey; font-size:16px; text-align:center}",
-          "#microorganism::placeholder {color:dimgrey; font-size:16px; text-align:center}",
-          "#sample_size::placeholder {color:dimgrey; font-size:16px; text-align:center}",
-          "#matrix::placeholder {color:dimgrey; font-size:16px; text-align:center}",
-          "#exp_date::placeholder {color:dimgrey; font-size:16px; text-align:center}",
-          #typed text font & background
-          "#exp_name {background-color:white; color:black; font-size:16px; text-align:center}",
-          "#microorganism {background-color:white; color:black; font-size:16px; text-align:center}",
-          "#sample_size {background-color:white; color:black; font-size:16px; text-align:center}",
-          "#matrix {background-color:white; color:black; font-size:16px; text-align:center}",
-          "#num_labs {background-color:white; color:black; font-size:16px; text-align:center}",
-          "#exp_date {background-color:white; color:black; font-size:16px; text-align:center}",
-          "#num_levels {background-color:white; color:black; font-size:16px; text-align:center}"
-        ),
         fluidRow(
           column(width = 6, align = "center",
             wellPanel(
-              style = "color:white; background:steelblue",
+              id = "exp_description_left",
               textInput("exp_name",
-                label = div(style = "font-size:18px", "Experiment name"),
-                width = "100%", placeholder = "< experiment name >"
+                label = "Experiment name",
+                width = "100%",
+                placeholder = "< experiment name >"
               ),
               textInput("exp_date",
-                label = div(style = "font-size:18px", "Experiment date"),
-                width = "100%", placeholder = "< experiment date >"
+                label = "Experiment date",
+                width = "100%",
+                placeholder = "< experiment date >"
               ),
               textInput("matrix",
-                label = div(style = "font-size:18px", "Food Matrix"),
-                width = "100%", placeholder = "< food matrix >"
+                label = "Food Matrix",
+                width = "100%",
+                placeholder = "< food matrix >"
               ),
               textInput("microorganism",
-                label = div(style = "font-size:18px", "Microorganism"),
-                width = "100%", placeholder = "< microorganism >"
+                label = "Microorganism",
+                width = "100%",
+                placeholder = "< microorganism >"
               )
             )
           ),
           column(width = 6, align = "center",
             wellPanel(
-              style = "color:white; background:steelblue;",
+              id = "exp_description_right",
               numericInput("num_labs",
-                label = div(
-                  style = "font-size:18px",
-                  "How many labs?"
-                ),
+                label = "How many labs?",
                 width = "100%", value = glob_default_labs,
                 min = glob_min_labs, max = glob_max_labs
               ),
               numericInput("num_levels",
-                label = div(
-                  style = "font-size:18px",
-                  "How many inoculum levels?"
-                ),
+                label = "How many inoculum levels?",
                 width = "100%", value = glob_default_levels,
                 min = glob_min_levels, max = glob_max_levels
               ),
               numericInput("sample_size",
-                label = div(
-                  style = "font-size:18px",
-                  HTML("Test portion size (g or mL)")
-                ),
+                label = "Test portion size (g or mL)",
                 width = "100%", value = glob_default_size,
                 min = glob_min_size
               ),
               shinyWidgets::radioGroupButtons(
                 inputId = "lod_unit",
-                label = div(
-                  style = "font-size:18px",
-                  "LOD unit"
-                ),
+                label = "LOD unit",
                 choices = c("CFU/g", "CFU/mL", "CFU/test portion"),
                 size = "lg",
                 individual = TRUE,
                 checkIcon = list(
                   yes = tags$i(
-                    class = "fa fa-circle",
-                    style = "color: steelblue"
+                    class = "fa fa-circle"
                   ),
                   no = tags$i(
-                    class = "fa fa-circle-o",
-                    style = "color: steelblue")
+                    class = "fa fa-circle-o"
+                  )
                 )
               )
             )
@@ -177,103 +135,100 @@ my_calculator <- tabItem(
         inputId = "use_example",
         label = "Use example data?",
         value = FALSE,
-        onLabel = "Yes",
-        offLabel = "No",
-        onStatus = "success",
-        offStatus = "danger",
+        onLabel = "Yes", offLabel = "No",
+        onStatus = "success", offStatus = "danger",
         size = "large",
-        labelWidth = "150px",
-        handleWidth = "50px",
-        disabled = FALSE,
-        inline = TRUE,
-        width = "auto"
+        labelWidth = "150px", handleWidth = "50px",
+        disabled = FALSE, inline = TRUE, width = "auto"
       ),
-
 
       br(),
       fluidRow(
         h3(strong("Lab-Level Data"))
       ),
 
-      # wellSingleLabUI(id = "1", lab_id = 1, num_levels = 30,  #for testing
+      # wellSingleLabUI(id = "1", lab_id = 1, num_levels = 30,  #for testing only
       #   num_levels_default = 3)
 
-      # initialize data input boxes for each lab
-
-      #first lab
-      #"lab1_inoc_level1", "lab1_ntest1", "lab1_npos1", etc.
-      wellSingleLabUI(
-        id = "well_lab_1",
-        lab_id = 1, num_levels = glob_max_levels,
-        num_levels_default = glob_default_levels,
-        fluidRow(
-          column(width = 4,
-            actionButton("fill_inoc_level_d",
-              label = "Fill other labs",
-              width = "60%",
-              style = glob_style_fill_labs
+      conditionalPanel("!input.use_example",
+        # Initialize data input boxes for each lab
+        #"lab1_inoc_level1", "lab1_ntest1", "lab1_npos1", etc.
+        #first lab
+        wellSingleLabUI(
+          id = "well_lab_1",
+          lab_id = 1, num_levels = glob_max_levels,
+          num_levels_default = glob_default_levels,
+          fluidRow(
+            column(width = 4,
+              actionButton("fill_inoc_level_d",
+                label = "Fill other labs",
+                width = "60%",
+                class = "fill-labs"
+              )
+            ),
+            column(width = 4,
+              actionButton("fill_ntubes_n",
+                label = "Fill other labs",
+                width = "60%",
+                class = "fill-labs"
+              )
             )
           ),
-          column(width = 4,
-            actionButton("fill_ntubes_n",
-              label = "Fill other labs",
-              width = "60%",
-              style = glob_style_fill_labs
+          fluidRow(
+            column(width = 4,
+              actionButton("clear_inoc_level_d",
+                label = "Clear other labs",
+                width = "60%",
+                class = "fill-labs"
+              )
+            ),
+            column(width = 4,
+              actionButton("clear_ntubes_n",
+                label = "Clear other labs",
+                width = "60%",
+                class = "fill-labs"
+              )
+            ),
+            column(width = 4,
+              actionButton("clear_npos_y",
+                label = "Clear other labs",
+                width = "60%",
+                class = "fill-labs"
+              )
             )
           )
         ),
-        fluidRow(
-          column(width = 4,
-            actionButton("clear_inoc_level_d",
-              label = "Clear other labs",
-              width = "60%",
-              style = glob_style_fill_labs
-            )
-          ),
-          column(width = 4,
-            actionButton("clear_ntubes_n",
-              label = "Clear other labs",
-              width = "60%",
-              style = glob_style_fill_labs
-            )
-          ),
-          column(width = 4,
-            actionButton("clear_npos_y",
-              label = "Clear other labs",
-              width = "60%",
-              style = glob_style_fill_labs
-            )
-          )
-        )
-      ),
 
-      #labs 2 thru 30
-      #https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
-      lapply(2:glob_max_labs, function(i) {
-        lab_box <- wellSingleLabUI(
-          id = as.character("well_lab_", i),
-          lab_id = i, num_levels = glob_max_levels,
-          num_levels_default = glob_default_levels
-        )
-        if (i > glob_default_labs) {
-          shinyjs::hidden(lab_box)
-        } else {
-          lab_box
-        }
-      }),
+        #labs 2 thru 30
+        #https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
+        lapply(2:glob_max_labs, function(i) {
+          lab_box <- wellSingleLabUI(
+            id = as.character("well_lab_", i),
+            lab_id = i, num_levels = glob_max_levels,
+            num_levels_default = glob_default_levels
+          )
+          if (i > glob_default_labs) {
+            shinyjs::hidden(lab_box)
+          } else {
+            lab_box
+          }
+        })
+
+      ),
 
       conditionalPanel("input.use_example",
         shinydashboard::box(
           width = 12,
-            h4(
-              paste(
-                "Test portion size:", glob_sample_size_example,
-                glob_sample_unit_example
-              )
-            ),
-            tableOutput("example_data")
+          h4(
+            paste(
+              "Test portion size:", glob_sample_size_example,
+              glob_sample_unit_example
+            )
+          ),
+          tableOutput("example_data")
         )
       )
+
     ),  #end of data entry
 
 
@@ -301,7 +256,7 @@ my_calculator <- tabItem(
         width = 12, status = "info",
         title = div(
           strong("Notes"),
-          style = "font-size: 22px; line-height: 1.1"
+          class = "notes-title"
         ),
         solidheader = FALSE, background = "blue",
         collapsible = TRUE, collapsed = FALSE,
@@ -332,14 +287,14 @@ my_calculator <- tabItem(
               strong(em("References")), "in the sidebar for the full citation."
             )
           ),
-          style = "font-size: 16px; line-height: 1.1"
+          class = "notes-body"
         )
       ),
 
       shinydashboard::box(
         title = div(
           strong("Instructions"),
-          style = "font-size: 22px; line-height: 1.1"
+          class = "notes-title"
         ),
         width = 12, status = "info",
         solidheader = FALSE, background = NULL,
@@ -428,8 +383,7 @@ my_calculator <- tabItem(
             )
           )
         ),
-
-        style = "font-size: 16px; line-height: 1.1"
+        class = "notes-body"
       )
 
     )
@@ -449,7 +403,8 @@ my_results <- tabItem(
     column(width = 3,
       br(), br(),
       shinyjs::disabled(
-        shinyWidgets::downloadBttn("download_results",
+        shinyWidgets::downloadBttn(
+          outputId = "download_results",
           label = "Download Results",
           style = "gradient",
           color = "primary",
@@ -467,7 +422,7 @@ my_results <- tabItem(
 
     tabPanel(
       title = HTML(
-        "<strong style = 'font-size:20px'>",
+        "<strong>",
           "Model Parameters & LOD",
         "</strong>"
       ),
@@ -479,8 +434,11 @@ my_results <- tabItem(
       br(),
       column(
         width = 9,
-        box(
-          title = tags$p("Model Parameter Estimates", style = "font-size: 125%;"),
+        shinydashboard::box(
+          title = div(
+            "Model Parameter Estimates",
+            class = "results-title"
+          ),
           width = 12,
           fluidRow(
             column(width = 12, align = "center",
@@ -490,8 +448,11 @@ my_results <- tabItem(
             )
           )
         ),
-        box(
-          title = tags$p("Level of Detection", style = "font-size: 125%;"),
+        shinydashboard::box(
+          title = div(
+            "Level of Detection",
+            class = "results-title"
+          ),
           width = 12,
           fluidRow(
             column(width = 12, align = "center",
@@ -506,7 +467,7 @@ my_results <- tabItem(
 
     tabPanel(
       title = HTML(
-        "<strong style = 'font-size:20px'>",
+        "<strong>",
           "POD Curves",
         "</strong>"
       ),
@@ -535,7 +496,7 @@ my_analysis_details <- tabItem(tabName = "analysis_details",
       "validation study for a qualitative (binary) microbiological assay.",
       "The model is fit using R statistical software."
     ),
-    style = "font-size: 18px; line-height: 1.25"
+    class = "analysis-body"
   ),
 
   br(),
@@ -559,7 +520,7 @@ my_analysis_details <- tabItem(tabName = "analysis_details",
       "values and a margin of error using a t critical value and the estimated",
       "standard errors from the fitted POD function."
     ),
-    style = "font-size: 18px; line-height: 1.25"
+    class = "analysis-body"
   ),
 
   br(),
@@ -581,15 +542,15 @@ my_analysis_details <- tabItem(tabName = "analysis_details",
       "the standard <em>stats</em> package is used to apply the ANCOVA method",
       "of Stanish et al. (1983)."
     )),
-    style = "font-size: 18px; line-height: 1.25"
+    class = "analysis-body"
   )
 )
 
 
 #############################  References  #####################################
 
-my_references <- tabItem(tabName = "references",
-
+my_references <- tabItem(
+  tabName = "references",
   h2(strong("References")),
   br(),
   tags$ol(
@@ -650,8 +611,7 @@ my_references <- tabItem(tabName = "references",
         '</div>'
       ))
     ),
-
-  style = "font-size: 18px; line-height: 1.2"
+  class = "references-body"
   )
 )
 
@@ -668,8 +628,30 @@ ui <- dashboardPage(
     my_sidebar, width = 275
   ),
   dashboardBody(
+    tags$html(lang = "en-US"),
     #https://stackoverflow.com/questions/45706670/shiny-dashboadpage-lock-dashboardheader-on-top
     tags$script(HTML("$('body').addClass('fixed');")),
+    tags$head(
+      #https://stackoverflow.com/questions/51294246/how-can-i-include-meta-tags-in-my-r-shiny-app
+      tags$meta(charset = "utf-8"),
+      tags$meta(name = "description",
+        content = paste(
+          "The MultiLab POD/LOD/ICC R Shiny app is for interlaboratory",
+          "microbiological method validation studies. This app implements the",
+          "random intercept complementary log-log model suggested by Jarvis",
+          "et al. (2019) to estimate probability of detection (POD) and level",
+          "of detection (LOD) from a multi-laboratory validation study for a",
+          "qualitative (binary) microbiological assay. This app also",
+          "calculates the intra-laboratory correlation coefficient (ICC) to",
+          "estimate the proportion of total variance attributable to",
+          "between-laboratory variance."
+        )
+      ),
+      tags$script(withMathJax()),
+      #includeCSS("www/style.css")  #for code development only!!!
+      tags$link(rel = "stylesheet", type = "text/css", href = "style.css")  #for production
+    ),
+
     tabItems(
       my_calculator,
       my_results,
