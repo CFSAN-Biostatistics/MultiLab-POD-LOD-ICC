@@ -108,24 +108,16 @@ wellSingleLabUI <- function(id, lab_id, num_levels, num_levels_default, ...) {
 
   wellPanel(
     id = paste0("panel_lab", lab_id),
-    style = paste0(
-      "color:white; font-size:22px;",
-      "background:steelblue; border-color:black; border-width:3px"
-    ),
-    #header information
+    class = "lab-well",
     fluidRow(
-      tags$style(
-        paste0("#", lab_name,
-          "{background-color:white; color:black; font-size:18px}"
-        )
-      ),
       column(width = 5, align = "right",
         paste0("Laboratory ", lab_id, " Name:")
       ),
       column(width = 7, align = "left",
         textInput(inputId = lab_name,
           width = "90%", label = NULL, value = paste0("Lab ", lab_id)
-        )
+        ) %>%
+          tagAppendAttributes(class = "lab-well-top")
       )
     ),
     fluidRow(
@@ -146,7 +138,7 @@ wellSingleLabUI <- function(id, lab_id, num_levels, num_levels_default, ...) {
     #inoculum levels, etc.
     wellPanel(
       id = paste0("panel_lab_data", lab_id),
-      style = "background:lightblue; border-width:0px; margin-bottom:0px",
+      class = "lab-well-inner",
       #https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
         lapply(1:num_levels, function(i) {  #iterating over rows
           inoc_level_i <- paste0("inoc_level", i)
@@ -154,6 +146,7 @@ wellSingleLabUI <- function(id, lab_id, num_levels, num_levels_default, ...) {
           npos_i       <- paste0("npos", i)
           my_row <- fluidRow(
             id = paste0("panel_lab", lab_id, "_level", i),
+            class = "lab-well-level",
             lapply(c(inoc_level_i, ntest_i, npos_i), function(j) {
               input_name <- paste0(lab_name, "_", j)  #'lab1_inoc_level1', etc.
               if (grepl("inoc_level", j, fixed = TRUE)) {
@@ -167,21 +160,16 @@ wellSingleLabUI <- function(id, lab_id, num_levels, num_levels_default, ...) {
                 my_icon <- "clipboard-check"
               }
               column(width = 4, align = "center",
-                tags$style(
-                  paste0("#", input_name,
-                    "{background-color:white; color:black; font-size:18px}"
-                  )
-                ),
                 #"lab1_inoc_level1", "lab1_ntest1", "lab1_npos1", etc.
                 shinyWidgets::numericInputIcon(
                   inputId = input_name, label = "",
-                  value = 0, min = 0,
+                  value = 0,
                   step = my_step,
                   icon = icon(my_icon),
                   size = NULL,
-                  help_text = "Negative values are not allowed",
                   width = "100%"
-                )
+                ) %>%
+                  tagAppendAttributes(class = "lab-well-inner-data")
               )
             })
           )
