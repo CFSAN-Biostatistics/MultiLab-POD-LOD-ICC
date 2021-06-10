@@ -2,6 +2,7 @@
 /*  CSS Styling for the MultiLab POD/LOD/ICC app  */
 /**************************************************/
 
+
 .sidebar-menu {
   font-size: 18px;
 }
@@ -53,6 +54,14 @@
   #num_labs-label, #num_levels-label, #sample_size-label, #lod_unit-label {
     font-size: 20px;
   }
+
+.use_example_text {
+  font-size: 20px;
+  line-height: 8px;
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+}
 
 .fa-circle {
   color: "#003152";
