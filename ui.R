@@ -131,16 +131,33 @@ my_calculator <- tabItem(
         )
       ),
 
-      shinyWidgets::switchInput(
-        inputId = "use_example",
-        label = "Use example data?",
-        value = FALSE,
-        onLabel = "Yes", offLabel = "No",
-        onStatus = "success", offStatus = "danger",
-        size = "large",
-        labelWidth = "150px", handleWidth = "50px",
-        disabled = FALSE, inline = TRUE, width = "auto"
+      fluidRow(
+        span(class = "use_example_text",
+          HTML("Click to choose: &nbsp;"),
+        ),
+        shinyWidgets::switchInput(
+          inputId = "use_example",
+          label = "Use example data?",
+          value = FALSE,
+          onLabel = "Yes", offLabel = "No",
+          onStatus = "success", offStatus = "danger",
+          size = "large",
+          labelWidth = "150px", handleWidth = "50px",
+          disabled = FALSE, inline = TRUE, width = "auto"
+        ),
       ),
+
+
+      # shinyWidgets::switchInput(
+      #   inputId = "use_example",
+      #   label = "Use example data?",
+      #   value = FALSE,
+      #   onLabel = "Yes", offLabel = "No",
+      #   onStatus = "success", offStatus = "danger",
+      #   size = "large",
+      #   labelWidth = "150px", handleWidth = "50px",
+      #   disabled = FALSE, inline = TRUE, width = "auto"
+      # ),
 
       br(),
       fluidRow(
