@@ -147,18 +147,6 @@ my_calculator <- tabItem(
         ),
       ),
 
-
-      # shinyWidgets::switchInput(
-      #   inputId = "use_example",
-      #   label = "Use example data?",
-      #   value = FALSE,
-      #   onLabel = "Yes", offLabel = "No",
-      #   onStatus = "success", offStatus = "danger",
-      #   size = "large",
-      #   labelWidth = "150px", handleWidth = "50px",
-      #   disabled = FALSE, inline = TRUE, width = "auto"
-      # ),
-
       br(),
       fluidRow(
         h3(strong("Lab-Level Data"))

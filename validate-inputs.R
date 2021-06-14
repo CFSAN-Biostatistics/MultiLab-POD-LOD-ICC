@@ -10,7 +10,7 @@ validateDescription <- function(num_labs, num_levels, sample_size, session) {
       title = description_error,
       text = "Number of labs must be a positive whole number."
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(desc_validate1)
 
@@ -20,7 +20,7 @@ validateDescription <- function(num_labs, num_levels, sample_size, session) {
       title = description_error,
       text = "Number of levels must be a positive whole number."
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(desc_validate2)
 
@@ -30,7 +30,7 @@ validateDescription <- function(num_labs, num_levels, sample_size, session) {
       title = description_error,
       text = paste0("Maximum number of labs is ", glob_max_labs, ".")
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(desc_validate3)
 
@@ -40,7 +40,7 @@ validateDescription <- function(num_labs, num_levels, sample_size, session) {
       title = description_error,
       text = paste0("Maximum number of levels is ", glob_max_levels, ".")
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(desc_validate4)
 
@@ -50,7 +50,7 @@ validateDescription <- function(num_labs, num_levels, sample_size, session) {
       title = description_error,
       text = paste0("Minimum number of labs is ", glob_min_labs, ".")
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(desc_validate5)
 
@@ -60,7 +60,7 @@ validateDescription <- function(num_labs, num_levels, sample_size, session) {
       title = description_error,
       text = paste0("Minimum number of levels is ", glob_min_levels, ".")
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(desc_validate6)
 
@@ -70,7 +70,7 @@ validateDescription <- function(num_labs, num_levels, sample_size, session) {
       title = description_error,
       text = "Test portion size must be a positive number."
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(desc_validate7)
 }
@@ -87,7 +87,7 @@ validateData <- function(dat, session) {
       title = input_error,
       text = "Some data are missing or non-numeric."
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(input_validate1)
 
@@ -97,7 +97,7 @@ validateData <- function(dat, session) {
       title = input_error,
       text = "All data must be non-negative."
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(input_validate2)
 
@@ -107,7 +107,7 @@ validateData <- function(dat, session) {
       title = input_error,
       text = "Each lab must have at least 1 positive inoculum level."
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(input_validate3)
 
@@ -117,27 +117,27 @@ validateData <- function(dat, session) {
       title = input_error,
       text = "Each inoculation level must have at least 1 tube inoculated."
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(input_validate4)
 
-  input_validate5 <- all(sum_data$npos > 0)
+  input_validate5 <- any(dat$npos > 0)
   if (!input_validate5) {
     shinyWidgets::sendSweetAlert(session = session, type = "error",
       title = input_error,
-      text = "Each lab must have at least 1 positive tube."
+      text = "At least 1 lab must have a positive tube."
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(input_validate5)
 
-  input_validate6 <- all(sum_data$ntest - sum_data$npos > 0)
+  input_validate6 <- any(dat$ntest - dat$npos > 0)
   if (!input_validate6) {
     shinyWidgets::sendSweetAlert(session = session, type = "error",
       title = input_error,
-      text = "Each lab must have at least 1 negative tube."
+      text = "At least 1 lab must have a negative tube."
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(input_validate6)
 
@@ -147,7 +147,7 @@ validateData <- function(dat, session) {
       title = input_error,
       text = "Tubes inoculated must always be >= tubes positive."
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(input_validate7)
 
@@ -157,7 +157,7 @@ validateData <- function(dat, session) {
       title = input_error,
       text = "Tubes inoculated and tubes positive must be whole numbers."
     )
-    shinyjs::disable("download_results-button_bttn")
+    shinyjs::disable("download_results_bttn")
   }
   req(input_validate8)
 }

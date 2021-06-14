@@ -69,7 +69,8 @@
 
 .fill-labs {
   color: white;
-  background-color: grey;
+  font-size: 16px;
+  background-color: #707070;
   border-color: black;
   margin-top: 20px;
 }
