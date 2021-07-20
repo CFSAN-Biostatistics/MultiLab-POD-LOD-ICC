@@ -63,99 +63,82 @@ my_calculator <- tabItem(
     # Experiment Description
     column(width = 8, align = "center",
 
-      wellPanel(
-        id = "experiment_description",
-        h3(strong("Experiment Description")),
-        br(),
-        fluidRow(
-          column(width = 6, align = "center",
-            wellPanel(
-              id = "exp_description_left",
-              textInput("exp_name",
-                label = "Experiment name",
-                width = "100%",
-                placeholder = "< experiment name >"
-              ),
-              textInput("exp_date",
-                label = "Experiment date",
-                width = "100%",
-                placeholder = "< experiment date >"
-              ),
-              textInput("matrix",
-                label = "Food Matrix",
-                width = "100%",
-                placeholder = "< food matrix >"
-              ),
-              textInput("microorganism",
-                label = "Microorganism",
-                width = "100%",
-                placeholder = "< microorganism >"
-              )
-            )
-          ),
-          column(width = 6, align = "center",
-            wellPanel(
-              id = "exp_description_right",
-              numericInput("num_labs",
-                label = "How many labs?",
-                width = "100%", value = glob_default_labs,
-                min = glob_min_labs, max = glob_max_labs
-              ),
-              numericInput("num_levels",
-                label = "How many inoculum levels?",
-                width = "100%", value = glob_default_levels,
-                min = glob_min_levels, max = glob_max_levels
-              ),
-              numericInput("sample_size",
-                label = "Test portion size (g or mL)",
-                width = "100%", value = glob_default_size,
-                min = glob_min_size
-              ),
-              shinyWidgets::radioGroupButtons(
-                inputId = "lod_unit",
-                label = "LOD unit",
-                choices = c("CFU/g", "CFU/mL", "CFU/test portion"),
-                size = "lg",
-                individual = TRUE,
-                checkIcon = list(
-                  yes = tags$i(
-                    class = "fa fa-circle"
-                  ),
-                  no = tags$i(
-                    class = "fa fa-circle-o"
-                  )
-                )
-              )
-            )
+      fluidRow(
+        radioGroupButtons2(
+          inputId = "choose_data_entry",
+          label = "Please choose data entry method",
+          choices = c("Manual entry", "File upload", "Example data"),
+          selected = "Manual entry",
+          size = "lg",
+          individual = TRUE,
+          checkIcon = list(
+            yes = tags$i(class = "fa fa-check")
           )
         )
-      ),
-
-      fluidRow(
-        span(class = "use_example_text",
-          HTML("Click to choose: &nbsp;"),
-        ),
-        shinyWidgets::switchInput(
-          inputId = "use_example",
-          label = "Use example data?",
-          value = FALSE,
-          onLabel = "Yes", offLabel = "No",
-          onStatus = "success", offStatus = "danger",
-          size = "large",
-          labelWidth = "150px", handleWidth = "50px",
-          disabled = FALSE, inline = TRUE, width = "auto"
-        ),
-      ),
-
-      br(),
-      fluidRow(
-        h3(strong("Lab-Level Data"))
       ),
 
       # wellSingleLabUI(id = "1", lab_id = 1, num_levels = 30,  #for testing only
       #   num_levels_default = 3)
 
-      conditionalPanel("!input.use_example",
+      conditionalPanel(
+        condition = 'input.choose_data_entry == "Manual entry"',
+
+        wellPanel(
+          id = "experiment_description",
+          h3(strong("Experiment Description")),
+          br(),
+          fluidRow(
+            column(width = 6, align = "center",
+              wellPanel(
+                id = "exp_description_left",
+                textInput("exp_name",
+                  label = "Experiment name",
+                  width = "100%",
+                  placeholder = "< experiment name >"
+                ),
+                textInput("exp_date",
+                  label = "Experiment date",
+                  width = "100%",
+                  placeholder = "< experiment date >"
+                ),
+                textInput("matrix",
+                  label = "Food matrix",
+                  width = "100%",
+                  placeholder = "< food matrix >"
+                ),
+                textInput("microorganism",
+                  label = "Microorganism",
+                  width = "100%",
+                  placeholder = "< microorganism >"
+                )
+              )
+            ),
+            column(width = 6, align = "center",
+              wellPanel(
+                id = "exp_description_right",
+                numericInput("num_labs",
+                  label = "How many labs?",
+                  width = "100%", value = glob_default_labs,
+                  min = glob_min_labs, max = glob_max_labs
+                ),
+                numericInput("num_levels",
+                  label = "How many inoculum levels?",
+                  width = "100%", value = glob_default_levels,
+                  min = glob_min_levels, max = glob_max_levels
+                ),
+                numericInput("sample_size",
+                  label = "Test portion size (g or mL)",
+                  width = "100%", value = glob_default_size,
+                  min = glob_min_size
+                )
+              )
+            )
+          )
+        ),
+
+        fluidRow(
+          h3(strong("Lab-Level Data"))
+        ),
         # Initialize data input boxes for each lab
         #"lab1_inoc_level1", "lab1_ntest1", "lab1_npos1", etc.
         #first lab
@@ -221,7 +204,46 @@ my_calculator <- tabItem(
 
       ),
 
-      conditionalPanel("input.use_example",
+      conditionalPanel(
+        condition = 'input.choose_data_entry == "File upload"',
+        div(id = "download_template",
+          "Please",
+          a("download the Excel (.xlsx) template",
+            href = "MultiLab_POD_LOC_ICC_template.xlsx",
+            download = NA,
+            class = "template-link"
+          ),
+          " to your hard drive and add your data.",
+          p("Then save the file and upload for processing.")
+        ),
+        fileInput2(  #helpers.R - with onchange event attribute
+          inputId = "upload_file",
+          label = "Upload Excel file (.xlsx)",
+          multiple = FALSE,
+          accept = ".xlsx",
+          width = "65%",
+          buttonLabel = span("Browse...", class = "upload-browse"),
+          placeholder = "No file selected",
+          onchange = "enforceFileExtension(this)"
+        ),
+        # #I may use a modal instead of an alert sometime in the future
+        # #https://www.w3schools.com/howto/howto_css_modals.asp
+        # div(id = "invalid_extension", class = "modal",
+        #   div(class = "modal-content",
+        #     span(class = "close", HTML("&times;")),
+        #     p("Incorrect file extension")
+        #   )
+        # )
+        h3("Data preview:"),
+        shinydashboard::box(
+          width = 12,
+          htmlOutput("uploaded_test_portion", inline = TRUE),
+          tableOutput("uploaded_data_preview")
+        )
+      ),
+
+      conditionalPanel(
+        condition = 'input.choose_data_entry == "Example data"',
         shinydashboard::box(
           width = 12,
           h4(
@@ -237,9 +259,28 @@ my_calculator <- tabItem(
     ),  #end of data entry
 
 
-    ############################  Second column  ###############################
+    #--------------------------  Second column  --------------------------------
 
     column(width = 4, align = "left",
+      fluidRow(
+        column(width = 12, align = "center",
+          shinyWidgets::radioGroupButtons(
+            inputId = "lod_unit",
+            label = "Please choose LOD unit",
+            choices = c("CFU/g", "CFU/mL", "CFU/test portion"),
+            size = "lg",
+            individual = FALSE,
+            checkIcon = list(
+              yes = tags$i(
+                class = "fa fa-circle"
+              ),
+              no = tags$i(
+                class = "fa fa-circle-o"
+              )
+            )
+          )
+        )
+      ),
       fluidRow(
         column(width = 3),
         column(width = 6, align = "center",
@@ -256,139 +297,137 @@ my_calculator <- tabItem(
           )
         )
       ),
+
       br(),
+
       shinydashboard::box(
         width = 12, status = "info",
-        title = div(
-          strong("Notes"),
-          class = "notes-title"
-        ),
+        title = span("Notes", class = "notes-title"),
         solidheader = FALSE, background = "blue",
         collapsible = TRUE, collapsed = FALSE,
-        tags$ul(
-          tags$li(
-            p(
-              "Please don't use the back arrow in your browser. Use the",
-              "refresh button instead."
-            )
-          ),
-          tags$li(
-            p(
-              "See", strong(em('Analysis Details')),
-              "in the sidebar for information about the models and R",
-              "packages used."
-            )
-          ),
-          tags$li(
-            p(
-              "You can click", em("Use example data?"), "to bypass the data",
-              "entry sections."
-            )
-          ),
-          tags$li(
-            p(
-              "The example data are obtained from Jarvis et al. (2019) and the",
-              "Excel tool developed by Jarvis et al. Please see",
-              strong(em("References")), "in the sidebar for the full citation."
-            )
-          ),
-          class = "notes-body"
+        HTML(
+          '
+          <ul class = "notes-body">
+            <li class = "notes-li">
+              Please do not use the back arrow in your browser. Use the
+              refresh button instead.
+            </li>
+            <li class = "notes-li">
+              See <strong>Analysis Details</strong> in the sidebar
+              for information about the models and R packages used.
+            </li>
+            <li class = "notes-li">
+              The example data are obtained from Jarvis et al. (2019) and the
+              Excel tool developed by Jarvis et al. Please see
+              <strong>References</strong> in the sidebar for the full citation.
+            </li>
+          </ul>
+          '
         )
       ),
 
       shinydashboard::box(
-        title = div(
-          strong("Instructions"),
-          class = "notes-title"
-        ),
+        title = span("Data Entry Instructions", class = "notes-title"),
         width = 12, status = "info",
         solidheader = FALSE, background = NULL,
         collapsible = TRUE, collapsed = FALSE,
-        tags$ol(
-          tags$li(
-            p(
-              "Please enter the experiment name, etc. in the",
-              strong("Experiment Description"), "box.",
-            )
-          ),
-          tags$li(
-            p(
-              "In the first box under", strong("Lab-Level Data"), ":"
-            )
-          ),
-          tags$ol(type = "a",
-            tags$li(
-              p(
-                "Change the lab name if desired."
-              )
-            ),
-            tags$li(
-              p(
-                "In the first column, enter the inoculation levels (densities).",
-                "If all the labs used the same levels, click",
-                em("Fill other labs"), "underneath the column to populate the",
-                "remaining labs."
-              )
-            ),
-            tags$li(
-              p(
-                "In the second column, enter the number of tubes inoculated at",
-                "each level. Again, click", em("Fill other labs"),
-                "if applicable."
-              )
-            ),
-            tags$li(
-              p(
-                "In the third column, enter the number of positive tubes at",
-                "each level."
-              )
-            )
-          )
+        span("Manual entry", class = "notes-subheading"),
+        HTML(
+          '
+          <ol class = "notes-body">
+            <li class = "notes-li">
+              Enter the experiment name, etc. in the
+              <strong>Experiment Description</strong> box.
+            </li>
+            <li class = "notes-li">
+              In the first box under <strong>Lab-Level Data</strong>:
+              <ol type = "a">
+                <li class = "notes-li">
+                  Change the lab name if desired.
+                </li>
+                <li class = "notes-li">
+                  In the first column, enter the inoculation (dilution) levels
+                  in CFU/g or CFU/mL. Please do not use CFU/25g, etc.
+                  Click <em>Fill other labs</em> underneath the column to
+                  populate the remaining labs.
+                </li>
+                <li class = "notes-li">
+                  In the second column, enter the number of tubes inoculated at
+                  each level. Again, click <em>Fill other labs</em>
+                  if applicable.
+                </li>
+                <li class = "notes-li">
+                  In the third column, enter the number of positive tubes at
+                  each level.
+                </li>
+              </ol>
+            </li>
+            <li>
+              Fill in the missing information for the remaining boxes (labs).
+            </li>
+          </ol>
+          '
         ),
-        tags$ol(start = "3",
-          tags$li(
-            p(
-              "Fill in the missing information for the remaining boxes (labs)."
-            )
-          ),
-          tags$li(
-            p(
-              "In the sidebar, choose the level for the confidence limits."
-            )
-          ),
-          tags$li(
-            p(
-              HTML(
-                "Click &nbsp;",
-                "<span style = 'color: white; background-color: green'>",
-                  "&nbsp; Calculate &nbsp;",
-                "</span>",
-                "&nbsp; in the upper right corner."
-              )
-            )
-          ),
-          tags$li(
-            p(
-              "After the calculations are complete, you will be automatically",
-              "re-directed to the", strong(em("Results")), "page, which",
-              "contains two tabs:"
-            )
-          ),
-          tags$ol(type = "a",
-            tags$li(
-              p(
-                "The first tab gives estimates of lab effects, ICC, and LOD.",
-                "A button to download the results as an Excel file is included."
-              )
-            ),
-            tags$li(
-              p(
-                "The second tab shows a plot of POD vs. inoculation level.",
-              )
-            )
-          )
+        span("File upload", class = "notes-subheading"),
+        HTML(
+          '
+          <ol class = "notes-body">
+            <li class = "notes-li">
+              Download the Excel workbook template.
+            </li>
+            <li class = "notes-li">
+              Add your data per the instructions in the template and save the
+              file to your hard drive.
+            </li>
+            <li class = "notes-li">
+              Upload the file and verify the data shown in the preview.
+            </li>
+          </ol>
+          '
         ),
-        class = "notes-body"
+        span("Example data", class = "notes-subheading"),
+        HTML(
+          '
+          <ul class = "notes-body">
+            No data input required.
+          </ul>
+          '
+        )
+      ),
+
+      shinydashboard::box(
+        title = span("Analysis Instructions", class = "notes-title"),
+        width = 12, status = "info",
+        solidheader = FALSE, background = NULL,
+        collapsible = TRUE, collapsed = FALSE,
+        HTML(
+          '
+          <ol class = "notes-body">
+            <li class = "notes-li">
+              In the sidebar, choose the level for the confidence limits.
+            </li>
+            <li class = "notes-li">
+              In the upper right corner, choose the LOD unit. Then click
+              <span style = "color: white; background-color: green">
+                &nbsp; Calculate &nbsp;
+              </span>.
+            </li>
+            <li class = "notes-li">
+              After the calculations are complete, you will be automatically
+              re-directed to the <strong>Results</strong> page, which contains
+              a button to download the results and two tabs:
+            </li>
+              <ol type = "a">
+                <li class = "notes-li">
+                  The first tab gives estimates of model parameters, ICC, and LOD.
+                </li>
+                <li class = "notes-li">
+                  The second tab shows a plot of POD vs. inoculation level.
+                </li>
+              </ol>
+          </ol>
+          '
+        )
       )
 
     )
@@ -438,7 +477,7 @@ my_results <- tabItem(
 
       br(),
       column(
-        width = 9,
+        width = 12,
         shinydashboard::box(
           title = div(
             "Model Parameter Estimates",
@@ -447,9 +486,10 @@ my_results <- tabItem(
           width = 12,
           fluidRow(
             column(width = 12, align = "center",
-              valueBoxOutput("log_mean_effect", width = 4),
-              valueBoxOutput("se_log_mean_effect", width = 4),
-              valueBoxOutput("ICC", width = 4)
+              valueBoxOutput("log_mean_effect", width = 3),
+              valueBoxOutput("se_log_mean_effect", width = 3),
+              valueBoxOutput("sigma", width = 3),
+              valueBoxOutput("ICC", width = 3)
             )
           )
         ),
@@ -458,7 +498,7 @@ my_results <- tabItem(
             "Level of Detection",
             class = "results-title"
           ),
-          width = 12,
+          width = 9,
           fluidRow(
             column(width = 12, align = "center",
               valueBoxOutput("LOD", width = 4),
@@ -653,8 +693,10 @@ ui <- dashboardPage(
         )
       ),
       tags$script(withMathJax()),
-      #includeCSS("www/style.css")  #for code development only!!!
-      tags$link(rel = "stylesheet", type = "text/css", href = "style.css")  #for production
+      #includeCSS("www/style.css"),  #for code development only!!!
+      tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),  #for production
+      #includeScript("www/jscript.js", defer = "defer")  #for code development only!!!
+      tags$script(src = "jscript.js", defer = "defer")  #for production
     ),
 
     tabItems(

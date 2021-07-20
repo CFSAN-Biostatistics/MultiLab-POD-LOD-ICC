@@ -33,11 +33,11 @@ library(shinyWidgets)
 library(shinyalert)
 library(shinybusy)
 library(lme4)
-#library(performance) #ICC (no longer used as of v1.2.0)
 library(ggplot2)
 library(openxlsx)
 library(sessioninfo)
 library(dplyr)
+library(tidyr)  #new
 
 source("helpers.R")
 source("helpers-model.R")
@@ -45,7 +45,7 @@ source("validate-inputs.R")
 
 #global variables
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.4.0"
+glob_app_version <- "v1.5.0"
 
 glob_min_labs     <- 2L
 glob_max_labs     <- 30L
@@ -54,8 +54,9 @@ glob_default_labs <- 2L
 glob_panel_names  <- paste0("panel_lab", 1:glob_max_labs)  #see singleWellPanel()
 
 glob_min_levels <- 3L
+#glob_min_levels <- 2L  #for testing only!!!
 glob_max_levels <- 12L
-#glob_max_levels <- 3  #for testing only!!!
+#glob_max_levels <- 3L  #for testing only!!!
 
 glob_default_levels <- 3L
 
@@ -71,6 +72,10 @@ glob_log_mean_effect_desc <- span(
 )
 glob_se_log_mean_effect_desc <- span(
   HTML("SE of Mean Lab Effect"),
+  class = 'parameter-estimates-description'
+)
+glob_sigma_desc <- span(
+  withMathJax(HTML("SD of Lab Effects \\((\\widehat{\\sigma}\\))")),
   class = 'parameter-estimates-description'
 )
 glob_ICC_desc <- span(
@@ -103,7 +108,7 @@ n10 <- c(1, 8, 8, 8, 1)
 y10 <- c(0, 2, 3, 8, 1)
 
 glob_sample_size_example <- 25
-glob_sample_unit_example <- "g"
+glob_sample_unit_example <- "g or mL"
 glob_num_labs_example    <- 10
 glob_num_levels_example  <- length(d)
 dat_example <- data.frame(

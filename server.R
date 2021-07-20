@@ -31,12 +31,6 @@ server <- function(input, output, session) {
   })
 
 
-  output$example_data <- renderTable({
-    dat_example_ui
-    }, striped = TRUE, bordered = TRUE, align = 'c'
-  )
-
-
   # update number of labs & inoculum levels
   observeEvent(c(input$num_labs, input$num_levels), {
     req(input$num_labs > 0, input$num_levels > 0)
@@ -129,16 +123,134 @@ server <- function(input, output, session) {
   })
 
 
+  output$example_data <- renderTable({
+    dat_example_ui
+    }, striped = TRUE, bordered = TRUE, align = 'c'
+  )
+
+  observeEvent(input$upload_file, {
+    dat_uploaded()  #because reactive() is lazy
+  })
+
+  dat_uploaded <- reactive({
+    #https://mastering-shiny.org/action-transfer.html
+    req(input$upload_file)
+
+    #In case the .includes() JS method is unsupported in browser. (see jscript.js)
+    fname_uploaded <- input$upload_file$name
+    validateUploadExtension(fname_uploaded, session = session)
+
+    workbook <- input$upload_file$datapath
+
+    validateUploadSheetNames(workbook, session = session)  #validate-inputs.R
+
+    description <- openxlsx::read.xlsx(workbook, sheet = "description",
+      sep.names = "_", rows = 1:2, cols = 1:5
+    )
+    validateUploadTestPortionSize(description, session = session)
+
+    inoc_levels <- openxlsx::read.xlsx(workbook, sheet = "inoculation-levels",
+      sep.names = "_", rows = 1:2, cols = 2:13
+    )
+    inoc_levels <- inoc_levels[, !is.na(inoc_levels)]
+    counts <- openxlsx::read.xlsx(workbook, sheet = "counts",
+      sep.names = "_", rows = 1:31, cols = 1:26
+    )
+    counts <- counts[, colSums(!is.na(counts)) > 0]  #drop columns with only NA
+    counts <- counts[rowSums(!is.na(counts[, 3:ncol(counts)])) > 0, ]  #drop rows with only NA
+
+    validateUploadMinimumLabs(counts, session = session)  #validate-inputs.R
+    validateUploadDimensions(counts, inoc_levels, session = session)  #validate-inputs.R
+
+    counts_n <- counts %>%
+      dplyr::select(Lab_Number, Lab_Name, starts_with("n", ignore.case = FALSE)) %>%
+      tidyr::pivot_longer(
+        cols = starts_with("n", ignore.case = FALSE),
+        names_to = "var_n",
+        values_to = "n"
+      ) %>%
+      dplyr::rename(d = var_n)
+    counts_n$d <- sub("n", replacement = "d", x = counts_n$d, ignore.case = FALSE)
+
+    counts_y <- counts %>%
+      dplyr::select(Lab_Number, Lab_Name, starts_with("y", ignore.case = FALSE)) %>%
+      tidyr::pivot_longer(
+        cols = starts_with("y", ignore.case = FALSE),
+        names_to = "var_y",
+        values_to = "y"
+      ) %>%
+      dplyr::rename(d = var_y)
+    counts_y$d <- sub("y", replacement = "d", x = counts_y$d, ignore.case = FALSE)
+
+    counts2 <- dplyr::left_join(counts_n, counts_y, by = c("Lab_Number", "Lab_Name", "d"))
+
+    dils <- data.frame(
+      d = colnames(inoc_levels),
+      inoc_level = as.numeric(inoc_levels)
+    )
+
+    validateUploadDilutions(dils, session = session)  #validate-inputs.R
+
+    counts2 <- dplyr::left_join(counts2, dils, by = "d") %>%
+      dplyr::select(Lab_Number:d, inoc_level, n, y)
+
+    counts2$sample_size <- description$`Test_portion_size_(g_or_mL)`
+    counts2 <- counts2 %>%
+      dplyr::select(-Lab_Name, -d) %>%
+      dplyr::rename(
+        lab_id   = Lab_Number,
+        inoculum = inoc_level,
+        ntest    = n,
+        npos     = y
+      ) %>%
+      as.data.frame()
+
+    counts2$lab_id      <- as.integer(counts2$lab_id)
+    counts2$inoculum    <- as.numeric(counts2$inoculum)
+    counts2$ntest       <- as.integer(counts2$ntest)
+    counts2$npos        <- as.integer(counts2$npos)
+    counts2$sample_size <- as.numeric(counts2$sample_size)
+
+    validateData(counts2, session = session)
+
+    return(
+      list(description = description, inoc_levels = inoc_levels,
+           data_input = counts, data_model = counts2,
+           fname_uploaded = fname_uploaded
+      )
+    )
+  })
+
+  uploaded_data_for_preview <- reactive({
+    req(dat_uploaded())
+    dat <- dat_uploaded()$data_model
+    num_dils <- length(unique(dat$inoculum))
+    dat$sample_size <- NULL
+    dat$lab_id <- paste("Lab", dat$lab_id)
+    dat$lab_id[1:nrow(dat) %% num_dils != 1] <- ""
+    colnames(dat) <- c("Lab Name", "Inoculation Level", "Inoculated Tubes", "Positive Tubes")
+    return(dat)
+  })
+
+  output$uploaded_test_portion <- reactive({
+    req(dat_uploaded())
+    test_portion_size <- dat_uploaded()$description$`Test_portion_size_(g_or_mL)`
+    paste("<h4>Test portion size:", test_portion_size, "g or mL</h4>")
+  })
+
+  output$uploaded_data_preview <- renderTable({
+    req(uploaded_data_for_preview())
+    uploaded_data_for_preview()
+    }, striped = TRUE, bordered = TRUE, align = 'c'
+  )
+
+
   # Starts "chain reaction" for calculations & caches input values
   calculate_clicked <- eventReactive(input$calculate, {
 
-    validateDescription(input$num_labs, input$num_levels, input$sample_size,
-                        session = session)  #validate-inputs.R
-
-    iter <- input$calculate + 1
-    lod_unit    <- input$lod_unit
-    use_example <- input$use_example
-    if (use_example) {
+    choose_data_entry <- input$choose_data_entry
+    if (choose_data_entry == "Example data") {
+      fname_uploaded <- NA
       exp_name      <- "N/A"
       exp_date      <- "N/A"
       microorganism <- "N/A"
@@ -148,7 +260,10 @@ server <- function(input, output, session) {
       num_levels  <- glob_num_levels_example
       lab_ids   <- 1:num_labs
       lab_names <- paste("Lab", lab_ids)
-    } else {
+    } else if (choose_data_entry == "Manual entry") {
+      validateDescription(input$num_labs, input$num_levels, input$sample_size,
+                          session = session)  #validate-inputs.R
+      fname_uploaded <- NA
       exp_name      <- input$exp_name
       exp_date      <- input$exp_date
       microorganism <- input$microorganism
@@ -160,18 +275,35 @@ server <- function(input, output, session) {
       lab_names <- vapply(lab_ids, FUN.VALUE = "chr", function(x) {
         input[[paste0("lab", x)]]
       })
+    } else if (choose_data_entry == "File upload") {
+      req(dat_uploaded())
+      fname_uploaded <- dat_uploaded()$fname_uploaded
+      exp_desc    <- dat_uploaded()$description
+      inoc_levels <- dat_uploaded()$inoc_levels
+      data_input  <- dat_uploaded()$data_input
+      exp_name      <- exp_desc$Experiment_name
+      exp_date      <- exp_desc$Experiment_date
+      microorganism <- exp_desc$Microorganism
+      matrix        <- exp_desc$Food_matrix
+      sample_size   <- exp_desc$`Test_portion_size_(g_or_mL)`
+      num_labs      <- max(data_input$Lab_Number)
+      num_levels    <- ncol(inoc_levels)
+      lab_ids       <- data_input$Lab_Number
+      lab_names     <- data_input$Lab_Name
+    } else {
+      stop("Problem in calculate_clicked().")
     }
 
     list(
       date_time       = strftime(Sys.time(), format = "", tz = "", usetz = TRUE),
-      iter            = iter,
+      fname_uploaded  = fname_uploaded,
       exp_name        = exp_name,
       microorganism   = microorganism,
       matrix          = matrix,
       exp_date        = exp_date,
-      use_example     = use_example,
+      choose_data_entry = choose_data_entry,
       sample_size     = sample_size,
-      lod_unit        = lod_unit,
+      lod_unit        = input$lod_unit,
       num_labs        = num_labs,
       lab_names       = lab_names,
       num_levels      = num_levels,
@@ -187,14 +319,14 @@ server <- function(input, output, session) {
   # Data
   dat <- eventReactive(calculate_clicked(), {
 
-    use_example <- calculate_clicked()$use_example
+    choose_data_entry <- calculate_clicked()$choose_data_entry
     num_labs    <- calculate_clicked()$num_labs
     num_levels  <- calculate_clicked()$num_levels
     sample_size <- calculate_clicked()$sample_size
 
-    if (use_example) {
+    if (choose_data_entry == "Example data") {
       return(dat_example)
-    } else {
+    } else if (choose_data_entry == "Manual entry") {
       # inoculum level, number of inoculated tubes, number of positive tubes
       # "lab1_inoc_level1", "lab1_ntest1", "lab1_npos1", etc.
       lab_id   <- 1:num_labs
@@ -226,6 +358,11 @@ server <- function(input, output, session) {
       )
       validateData(dat, session = session)
       return(dat)
+    } else if (choose_data_entry == "File upload") {
+      req(dat_uploaded())
+      return(dat_uploaded()$data_model)
+    } else {
+      stop("Problem in dat().")
     }
   })
 
@@ -270,7 +407,7 @@ server <- function(input, output, session) {
         title = "Warning",
         text = span(HTML(
           "A random intercept model cannot be used for this data.",
-          "A model with only <em>fixed effects</em> is used instead.",
+          "A model with only <em>fixed effects</em> is used instead."
         ), class = "alert-text"),
         html = TRUE, type = "warning", timer = 0,
         confirmButtonCol = "#003152"
@@ -490,10 +627,16 @@ server <- function(input, output, session) {
       )
       is_LOD_error <- methods::is(tst_LOD, "error")
       if (is_LOD_error) {
-        shinyWidgets::sendSweetAlert(session = session,
-          title = "LOD Calculation Error", type = "error",
-          text = "Possibly due to zero-probability predictions."
+        shinyalert::shinyalert(
+          title = "LOD Calculation Error",
+          text = span(
+            "Possibly due to zero-probability predictions.",
+            class = "alert-text"
+          ),
+          html = TRUE, type = "error", timer = 0,
+          confirmButtonCol = "#003152"
         )
+        shinyWidgets::closeSweetAlert(session = session)
       }
       req(!is_LOD_error)
       LOD <- LODpoint(model = fit1, value = lod_prob,
@@ -694,6 +837,18 @@ server <- function(input, output, session) {
         subtitle = HTML(
           "<span class='parameter-estimates-value'>",
             model_fit()$mu_log_se_char,
+          "</span>"
+        ),
+        width = 12, icon = NULL, color = "navy"
+      )
+    })
+
+    output$sigma <- renderValueBox({
+      valueBox(
+        value = glob_sigma_desc,
+        subtitle = HTML(
+          "<span class='parameter-estimates-value'>",
+            model_fit()$sigma_char,
           "</span>"
         ),
         width = 12, icon = NULL, color = "navy"
@@ -928,12 +1083,14 @@ server <- function(input, output, session) {
       id = "progress_alert", value = 100
     )
     shinyWidgets::closeSweetAlert(session = session)
-    shinyWidgets::sendSweetAlert(session = session,
-      title = "Calculations complete!", type = "success",
-      text = span(HTML(
-        "Results will be loaded momentarily."
-      ), class = "alert-text"),
-      btn_colors = "#003152"
+    shinyalert::shinyalert(
+      title = "Calculations complete!",
+      text = span(
+        "Results will be loaded momentarily.",
+        class = "alert-text"
+      ),
+      html = TRUE, type = "success", timer = 0,
+      confirmButtonCol = "#003152"
     )
   })
 
@@ -965,6 +1122,11 @@ server <- function(input, output, session) {
       openxlsx::addWorksheet(workbook, sheetName = "Experiment Description")
       openxlsx::freezePane(workbook, sheet = "Experiment Description", firstRow = TRUE)
       calc <- calculate_clicked()
+      if (calc$choose_data_entry == "File upload") {
+        fname_uploaded <- paste0(" (", calc$fname_uploaded, ")")
+      } else {
+        fname_uploaded <- ""
+      }
       my_exp_description <-
         c("EXPERIMENT DESCRIPTION/",
           paste0("Experiment name:  ", calc$exp_name),
@@ -975,7 +1137,7 @@ server <- function(input, output, session) {
           paste0("LOD unit:  ",        calc$lod_unit),
           paste0("How many labs?  ",   calc$num_labs),
           paste0("How many inoculum levels?  ", calc$num_levels),
-          paste0("Use example data?  ", calc$use_example)
+          paste0("Data entry choice:  ", calc$choose_data_entry, fname_uploaded)
         )
       openxlsx::conditionalFormatting(workbook, sheet = "Experiment Description",
         cols = 1, rows = 1:100,

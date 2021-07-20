@@ -2,6 +2,17 @@
 /*  CSS Styling for the MultiLab POD/LOD/ICC app  */
 /**************************************************/
 
+.bold {
+  font-weight: bold;
+}
+
+.italic {
+  font-style: italic;
+}
+
+/******************************************************************************/
+/*------------------------------  Sidebar  -----------------------------------*/
+/******************************************************************************/
 
 .sidebar-menu {
   font-size: 18px;
@@ -23,6 +34,56 @@
 .email-link {
   text-decoration: underline;
 }
+
+
+/******************************************************************************/
+/*------------------------------  Calculator tab  ----------------------------*/
+/******************************************************************************/
+
+/*-------------------------  Progress bar & alerts  --------------------------*/
+
+.progress-group {
+  font-size: 22px;
+}
+
+.progress, .progress-bar {
+  font-size: 20px;
+  height: 20px;
+}
+
+#swal2-content {
+  font-size: 20px;
+}
+
+.creating-report {
+  font-size: 20px;
+  color: black;
+}
+
+.alert-text {
+  font-size: 20px;
+  color: black;
+}
+
+
+/*-------------------------  Choose data entry method  -----------------------*/
+
+#choose_data_entry-label {
+  font-size: 24px;
+}
+
+#choose_data_entry .btn-group {
+  border-style: solid;
+  border-color: black;
+  border-radius: 10px;
+}
+
+.choose-data-entry-text {
+  font-size: 20px;
+}
+
+
+/*----------------------------  Manual data entry ----------------------------*/
 
 #experiment_description {
   color:white; background:midnightblue; border-color:black; border-width:3px
@@ -49,34 +110,129 @@
   background: steelblue;
 }
 
-
 #exp_name-label, #exp_date-label, #matrix-label, #microorganism-label,
-  #num_labs-label, #num_levels-label, #sample_size-label, #lod_unit-label {
+  #num_labs-label, #num_levels-label, #sample_size-label {
     font-size: 20px;
   }
 
-.use_example_text {
-  font-size: 20px;
-  line-height: 8px;
-  display: inline-block;
-  position: relative;
-  vertical-align: middle;
+.lab-well {
+  color: white;
+  font-size: 22px;
+  background: steelblue;
+  border-color: black;
+  border-width: 3px;
 }
 
-.fa-circle {
-  color: "#003152";
+.lab-well-top > input {
+  background-color: white;
+  color: black;
+  font-size: 18px;
+}
+
+.lab-well-column-names {
+  color: white;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.lab-well-inner {
+  background: lightblue;
+  border-width: 0px;
+  margin-bottom: 0px;
+}
+
+.lab-well-inner-data > .input-group > input {
+  background-color: white;
+  color: black;
+  font-size: 18px;
 }
 
 .fill-labs {
   color: white;
-  font-size: 16px;
+  font-size: 18px;
   background-color: #707070;
   border-color: black;
   margin-top: 20px;
 }
 
+
+/*------------------------------  File upload  -------------------------------*/
+
+#download_template {
+  font-size: 20px;
+  color: black;
+  margin-bottom: 25px;
+  margin-top: 25px;
+}
+
+.template-link {
+  text-decoration: underline;
+}
+
+#upload_file-label {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.upload-browse {
+  font-size: 22px;
+  color: black;
+}
+.input-group-btn:first-child>.btn, .input-group-btn:first-child>.btn-group {
+  margin-top: -1px;
+  margin-bottom: -1px;
+  margin-left: -1px;
+  margin-right: 0px;
+  border: 3px solid black;
+  border-radius: 6px;
+
+  box-shadow: 0px 0px 5px;
+}
+
+input::placeholder {
+  font-size: 20px;
+  color: #273746 !important;
+}
+.form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {
+  background-color: white;
+  margin: 4px;
+  padding: 22px;
+  color: #273746;
+  font-size: 20px;
+  opacity: 1;
+}
+
+.input-group .form-control:last-child, .input-group-addon:last-child, .input-group-btn:first-child>.btn-group:not(:first-child)>.btn, .input-group-btn:first-child>.btn:not(:first-child), .input-group-btn:last-child>.btn, .input-group-btn:last-child>.btn-group>.btn, .input-group-btn:last-child>.dropdown-toggle {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+
+/*-----------------------------  Example data  -------------------------------*/
+
+.table {
+  font-size: 18px;
+}
+
+
+/*-----------------  Calculate button & Notes/Instructions -------------------*/
+
+#lod_unit-label {
+  font-size: 24px;
+}
+
+#lod_unit {
+  font-size: 22px;
+}
+
+.fa-circle {
+  color: "#003152";  /* also data entry method */
+}
+
 .notes-title {
   font-size: 22px;
+  font-weight: bold;
   line-height: 1.1;
 }
 
@@ -85,6 +241,24 @@
   line-height: 1.1;
 }
 
+.notes-subheading {
+  font-size: 20px;
+  font-style: italic;
+  display: inline-block;
+  margin-bottom: 5px;
+}
+
+.notes-li {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+
+
+/******************************************************************************/
+/*------------------------------  Results tab  -------------------------------*/
+/******************************************************************************/
+
 #mod {
   font-size: 24px;
 }
@@ -92,20 +266,6 @@
 .results-title {
   font-size: 22px;
   line-height: 1.1;
-}
-
-.analysis-body {
-  font-size: 20px;
-  line-height: 1.25;
-}
-
-.references-body {
-  font-size: 20px;
-  line-height: 1.25;
-}
-
-.table {
-  font-size: 16px;
 }
 
 .parameter-estimates-clear, .lod-estimates-clear {
@@ -145,51 +305,17 @@
   color: red;
 }
 
-.lab-well {
-  color: white;
-  font-size: 22px;
-  background: steelblue;
-  border-color: black;
-  border-width: 3px;
-}
 
-.lab-well-top > input {
-  background-color: white;
-  color: black;
-  font-size: 18px;
-}
+/******************************************************************************/
+/*-------------------  Analysis Details & References tabs  -------------------*/
+/******************************************************************************/
 
-.lab-well-inner {
-  background: lightblue;
-  border-width: 0px;
-  margin-bottom: 0px;
-}
-
-.lab-well-inner-data > .input-group > input {
-  background-color: white;
-  color: black;
-  font-size: 18px;
-}
-
-.progress-group {
-  font-size: 22px;
-}
-
-.progress, .progress-bar {
+.analysis-body {
   font-size: 20px;
-  height: 20px;
+  line-height: 1.25;
 }
 
-.creating-report {
+.references-body {
   font-size: 20px;
-  color: black;
-}
-
-.alert-text {
-  font-size: 20px;
-  color: black;
-}
-
-#swal2-content {
-  font-size: 20px;
+  line-height: 1.25;
 }

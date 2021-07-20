@@ -30,12 +30,12 @@ R version 4.0.5 or higher is needed. The following R packages (available on CRAN
 - shinyWidgets (>= v0.6.0)
 - shinyalert (>= v2.0.0)
 - shinybusy (>= v0.2.2)
-- lme4 (>= v1.1-26)
-- ~~performance (>= v0.4.8)~~
-- ggplot2 (>= v3.3.3)
-- openxlsx (>= 4.2.3)
+- lme4 (>= v1.1-27)
+- ggplot2 (>= v3.3.5)
+- openxlsx (>= 4.2.4)
 - sessioninfo (>= 1.1.1)
-- dplyr (>= 1.0.6)
+- dplyr (>= 1.0.7)
+- tidyr (>= 1.1.3)
 
 ---
 
@@ -48,6 +48,6 @@ To run this app, place all the files into your R working directory. At the R pro
 
 #### *Notes*
 
-* This app runs in Firefox and Chrome.
+* This app runs in Mozilla Firefox and Google Chrome.
 
 ---

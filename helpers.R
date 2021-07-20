@@ -37,61 +37,6 @@ LODpoint <- function(model, value, sample_size, inoculum) {
 # )
 
 
-#not used in v1.2.0  -----------------------------------------------------------
-# LODlimit <-
-#   function(model, value, sample_size, inoculum,
-#            limit = c("lower", "upper"), conf_level = 0.95,
-#            num_sim = 200L, seed = 1234) {
-#   # Returns the lower (or upper) confidence limit for LOD.
-#   limit <- match.arg(limit)
-#   findInt.LU <- function(x) {
-#     #returns a function whose root is the lower (or upper) CL for LOD
-#     my_df <- data.frame(sample_size = sample_size, lab_id = NA, inoculum = x)
-#     predictFUN <- function(model) {
-#       predict(model, my_df, re.form = NA, type = "response")
-#     }
-#     my_boot <- lme4::bootMer(model, FUN = predictFUN,
-#                              nsim = num_sim, seed = seed
-#     )
-#     if (limit == "lower") {
-#       my_index <- 2
-#     } else {
-#       my_index <- 1
-#     }
-#     confint(my_boot, level = conf_level)[my_index] - value
-#   }
-#
-#   #slower, but shouldn't fail
-#   # note: cannot start with 0
-#   search_interval <- range(0.001, max(inoculum) + 0.1)
-#   uniroot(findInt.LU, interval = search_interval)$root
-#
-#   # ##############################
-#   # #faster, but could fail
-#   # pt_est <- LODpoint(model, value, sample_size, inoculum)
-#   # search_interval <- range(0.75 * pt_est, 1.25 * pt_est)
-#   # uniroot(findInt.LU, interval = search_interval, extendInt = "yes")$root
-#   # #############################
-# }
-#
-# # LODlimit(model = fit1, value = .5, sample_size = sample_size,
-# #          inoc_levels = dat$inoculum, limit = "lower", level = 0.95,
-# #          num_sim = 200L, seed = 1234
-# # )
-#
-# ##what it looks like if it fails (faster approach only)
-# # my_df <- data.frame(sample_size = 25, labID = NA, inoculum = -1)
-# # lme4::bootMer(fit1, FUN = function(model) {
-# #        predict(model, my_df, re.form = NA, type = "response")
-# # })
-#
-# # LODlimit(model = fit1, value = .5, sample_size = sample_size,
-# #           inoc_levels = dat$inoculum, limit = "upper", level = 0.95,
-# #           num_sim = 200L, seed = 1234
-# # )
-#not used in v1.2.0  -----------------------------------------------------------
-
-
 
 ########################  User Interface  ######################################
 
@@ -122,16 +67,16 @@ wellSingleLabUI <- function(id, lab_id, num_levels, num_levels_default, ...) {
     ),
     fluidRow(
       column(width = 4,
-        h4("Inoculation level"),
-        h4("(CFU/g or CFU/mL)")
+        p("Inoculation level", class = "lab-well-column-names"),
+        p("(CFU/g or CFU/mL)", class = "lab-well-column-names")
       ),
       column(width = 4,
         br(),
-        h4("How many inoculated tubes?")
+        p("How many inoculated tubes?", class = "lab-well-column-names")
       ),
       column(width = 4,
         br(),
-        h4("How many positive tubes?")
+        p("How many positive tubes?", class = "lab-well-column-names")
       )
     ),
 
@@ -164,6 +109,7 @@ wellSingleLabUI <- function(id, lab_id, num_levels, num_levels_default, ...) {
                 shinyWidgets::numericInputIcon(
                   inputId = input_name, label = "",
                   value = 0,
+                  min = 0,
                   step = my_step,
                   icon = icon(my_icon),
                   size = NULL,
@@ -184,4 +130,47 @@ wellSingleLabUI <- function(id, lab_id, num_levels, num_levels_default, ...) {
 
   )
 }
+
+fileInput2 <- function(inputId, label, multiple, accept, width, buttonLabel,
+                       placeholder, onchange) {
+  #Allows user to specify 'onchange' attribute
+  #https://stackoverflow.com/questions/62220495/r-shiny-restrict-fileinput-to-filename-pattern-and-not-just-file-type
+  #https://stackoverflow.com/questions/190852/how-can-i-get-file-extensions-with-javascript
+  my_input <- fileInput(
+    inputId = inputId,
+    label = label,
+    multiple = multiple,
+    accept = accept,
+    width = width,
+    buttonLabel = buttonLabel,
+    placeholder = placeholder
+  )
+  my_input$children[[2]]$children[[1]]$children[[1]]$children[[2]]$attribs$onchange <- onchange
+  return(my_input)
+}
+
+
+radioGroupButtons2 <- function(inputId, label, choices, selected, size, individual, checkIcon) {
+  #Allows adding CSS to button text
+  my_button <- shinyWidgets::radioGroupButtons(
+    inputId    = inputId,
+    label      = label,
+    choices    = choices,
+    selected   = selected,
+    size       = size,
+    individual = individual,
+    checkIcon  = checkIcon
+  )
+  choice1 <- my_button$children[[3]]$children[[1]]$children[[1]][[1]]$children[[1]]$children[[4]]
+  choice2 <- my_button$children[[3]]$children[[1]]$children[[1]][[2]]$children[[1]]$children[[4]]
+  choice3 <- my_button$children[[3]]$children[[1]]$children[[1]][[3]]$children[[1]]$children[[4]]
+  choice1 <- HTML(paste0("<span class='choose-data-entry-text'>", choice1, "</span>"))
+  choice2 <- HTML(paste0("<span class='choose-data-entry-text'>", choice2, "</span>"))
+  choice3 <- HTML(paste0("<span class='choose-data-entry-text'>", choice3, "</span>"))
+  my_button$children[[3]]$children[[1]]$children[[1]][[1]]$children[[1]]$children[[4]] <- choice1
+  my_button$children[[3]]$children[[1]]$children[[1]][[2]]$children[[1]]$children[[4]] <- choice2
+  my_button$children[[3]]$children[[1]]$children[[1]][[3]]$children[[1]]$children[[4]] <- choice3
+  return(my_button)
+}
+
 
