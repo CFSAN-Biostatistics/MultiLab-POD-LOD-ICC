@@ -124,7 +124,7 @@ server <- function(input, output, session) {
 
 
   output$example_data <- renderTable({
-    dat_example_ui
+      dat_example_ui
     }, striped = TRUE, bordered = TRUE, align = 'c'
   )
 
@@ -135,20 +135,24 @@ server <- function(input, output, session) {
   dat_uploaded <- reactive({
     #https://mastering-shiny.org/action-transfer.html
     req(input$upload_file)
-
     #In case the .includes() JS method is unsupported in browser. (see jscript.js)
     fname_uploaded <- input$upload_file$name
-    validateUploadExtension(fname_uploaded, session = session)
-
+    #cat("filename: ", fname_uploaded, "\n")
+    file_extension <- tools::file_ext(fname_uploaded)
+    is_extension_valid <- file_extension %in% c("xlsx", "XLSX")
+    validateWithAlert(
+      is_extension_valid,
+      title = "Uploaded file validation error",
+      text = "Please select a file with extension .xlsx",
+      session = session
+    )
+    req(is_extension_valid)
     workbook <- input$upload_file$datapath
-
     validateUploadSheetNames(workbook, session = session)  #validate-inputs.R
-
     description <- openxlsx::read.xlsx(workbook, sheet = "description",
       sep.names = "_", rows = 1:2, cols = 1:5
     )
     validateUploadTestPortionSize(description, session = session)
-
     inoc_levels <- openxlsx::read.xlsx(workbook, sheet = "inoculation-levels",
       sep.names = "_", rows = 1:2, cols = 2:13
     )
@@ -158,10 +162,8 @@ server <- function(input, output, session) {
     )
     counts <- counts[, colSums(!is.na(counts)) > 0]  #drop columns with only NA
     counts <- counts[rowSums(!is.na(counts[, 3:ncol(counts)])) > 0, ]  #drop rows with only NA
-
     validateUploadMinimumLabs(counts, session = session)  #validate-inputs.R
     validateUploadDimensions(counts, inoc_levels, session = session)  #validate-inputs.R
-
     counts_n <- counts %>%
       dplyr::select(Lab_Number, Lab_Name, starts_with("n", ignore.case = FALSE)) %>%
       tidyr::pivot_longer(
@@ -171,7 +173,6 @@ server <- function(input, output, session) {
       ) %>%
       dplyr::rename(d = var_n)
     counts_n$d <- sub("n", replacement = "d", x = counts_n$d, ignore.case = FALSE)
-
     counts_y <- counts %>%
       dplyr::select(Lab_Number, Lab_Name, starts_with("y", ignore.case = FALSE)) %>%
       tidyr::pivot_longer(
@@ -181,19 +182,14 @@ server <- function(input, output, session) {
       ) %>%
       dplyr::rename(d = var_y)
     counts_y$d <- sub("y", replacement = "d", x = counts_y$d, ignore.case = FALSE)
-
     counts2 <- dplyr::left_join(counts_n, counts_y, by = c("Lab_Number", "Lab_Name", "d"))
-
     dils <- data.frame(
       d = colnames(inoc_levels),
       inoc_level = as.numeric(inoc_levels)
     )
-
     validateUploadDilutions(dils, session = session)  #validate-inputs.R
-
     counts2 <- dplyr::left_join(counts2, dils, by = "d") %>%
       dplyr::select(Lab_Number:d, inoc_level, n, y)
-
     counts2$sample_size <- description$`Test_portion_size_(g_or_mL)`
     counts2 <- counts2 %>%
       dplyr::select(-Lab_Name, -d) %>%
@@ -204,15 +200,12 @@ server <- function(input, output, session) {
         npos     = y
       ) %>%
       as.data.frame()
-
     counts2$lab_id      <- as.integer(counts2$lab_id)
     counts2$inoculum    <- as.numeric(counts2$inoculum)
     counts2$ntest       <- as.integer(counts2$ntest)
     counts2$npos        <- as.integer(counts2$npos)
     counts2$sample_size <- as.numeric(counts2$sample_size)
-
     validateData(counts2, session = session)
-
     return(
       list(description = description, inoc_levels = inoc_levels,
            data_input = counts, data_model = counts2,
@@ -381,7 +374,7 @@ server <- function(input, output, session) {
 
     # Step 1: Choose model - catch errors and warnings
     model_type <- chooseModel(dat_no_zeroes)  #random intercept or fixed effects?
-
+    #cat("model_type: ", model_type, "\n")
     #message(model_type); model_type <- "fixed effects"  #for testing only
 
     # Step 2: fit model
@@ -431,7 +424,7 @@ server <- function(input, output, session) {
       tst_glm <- tryCatch(
         stats::glm(cbind(npos, ntest - npos) ~
             offset(log(sample_size)) + offset(log(inoculum)),
-          data = dat_no_zeroes, family = binomial(link = cloglog)
+          data = dat_no_zeroes, family = binomial(link = "cloglog")
         ),
         error = function(e) e,
         warning = function(w) w
@@ -663,7 +656,7 @@ server <- function(input, output, session) {
       #####################################
       ## population level POD and 95% CI ##
       #####################################
-      ds <- c(1e-9, LOD, seq(from = min(1e-4, LOD), to = inoc_max, by = 1e-5))
+      ds <- c(1e-9, LOD, seq(from = min(1e-4, LOD), to = inoc_max, by = 1e-4))
       ds <- sort(unique(ds))
       df.predicted <- data.frame(
         sample_size = sample_size, lab_id = NA, inoculum = ds
@@ -677,37 +670,25 @@ server <- function(input, output, session) {
       df.predicted$meanPOD <- predict.fun(fit1)  #predicted mean POD using the model
       ## get 95% CI for mean POD
       #https://cran.r-project.org/web/packages/merTools/vignettes/Using_predictInterval.html
-      #  from link above - Step 3a: lme4::bootMer() method 1
+      #  from link above - similar to Step 3a: lme4::bootMer() method 1
       ####Return predicted values from bootstrap
       mySumm <- function(.) {
         predict(., newdata = df.predicted, re.form = NA, type = "response")
       }
-      ####Collapse bootstrap into 95% PI
-      sumBoot <- function(merBoot) {
-        return(
-          data.frame(
-            lwr = apply(merBoot$t, MARGIN = 2,
-                        FUN = function(x) {
-                          as.numeric(quantile(x, probs = my_alpha / 2, na.rm = TRUE))
-                        }
-                  ),
-            upr = apply(merBoot$t, MARGIN = 2,
-                        FUN = function(x) {
-                          as.numeric(quantile(x, probs = 1 - (my_alpha / 2), na.rm = TRUE))
-                        }
-                  )
-          )
-        )
-      }
       ##lme4::bootMer() method
-      boot1 <- lme4::bootMer(fit1, FUN = mySumm, nsim = 500, seed = 27181,
-                             re.form = NA, type = "parametric")
-
+      boot1 <- lme4::bootMer(fit1,
+        FUN = mySumm, nsim = 500,
+        seed = 27181, re.form = NA, type = "parametric"
+      )
       shinyWidgets::updateProgressBar(session = session,
         id = "progress_alert", value = 80
       )
-
-      PI.boot1 <- sumBoot(boot1)
+      ####Collapse bootstrap into 95% PI
+      half_alpha <- my_alpha / 2
+      half_alpha_complement <- 1 - half_alpha
+      PI.boot1 <- sumBoot(boot1,  #helpers.R
+        half_alpha = half_alpha, half_alpha_complement = half_alpha_complement
+      )
       meanPOD.L <- PI.boot1[, 1]
       meanPOD.U <- PI.boot1[, 2]
       # gather results
@@ -728,7 +709,7 @@ server <- function(input, output, session) {
       # individual intercept and its SE for each lab
       fit2 <- stats::glm(cbind(npos, ntest - npos) ~
           0 + offset(log(sample_size)) + as.factor(lab_id) + offset(log(inoculum)),
-        data = dat_no_zeroes, family = binomial(link = cloglog)
+        data = dat_no_zeroes, family = binomial(link = "cloglog")
       )
       summary_fit2 <- summary(fit2)
       coef_fit2    <- coef(summary_fit2)
@@ -1069,19 +1050,25 @@ server <- function(input, output, session) {
   #########################  end of plot curves  ###############################
 
 
+  trigger_calc_complete <- reactiveVal(0)
+
   observeEvent(plotCurves(), {
     output$POD_plots <- renderPlot({
       plotCurves()
     })
-    shinyjs::delay(1000, {
-      updateTabItems(session = session, inputId = "my_tabs", selected = "results")
-      shinyjs::delay(3000,
-        shinyjs::enable("download_results_bttn")
-      )
-    })
     shinyWidgets::updateProgressBar(session = session,
       id = "progress_alert", value = 100
     )
+    shinyjs::delay(1000, {
+      updateTabItems(session = session, inputId = "my_tabs", selected = "results")
+      shinyjs::delay(3000, {
+        shinyjs::enable("download_results_bttn")
+        trigger_calc_complete(trigger_calc_complete() + 1)
+      })
+    })
+  })
+
+  observeEvent(trigger_calc_complete(), {
     shinyWidgets::closeSweetAlert(session = session)
     shinyalert::shinyalert(
       title = "Calculations complete!",
@@ -1092,7 +1079,7 @@ server <- function(input, output, session) {
       html = TRUE, type = "success", timer = 0,
       confirmButtonCol = "#003152"
     )
-  })
+  }, ignoreInit = TRUE)
 
 
   #https://mastering-shiny.org/action-transfer.html

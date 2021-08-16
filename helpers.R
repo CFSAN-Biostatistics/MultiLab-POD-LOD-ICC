@@ -37,6 +37,25 @@ LODpoint <- function(model, value, sample_size, inoculum) {
 # )
 
 
+sumBoot <- function(merBoot, half_alpha, half_alpha_complement) {
+  # merBoot: a 'boot' object from lme4::bootMer()
+  return(
+    data.frame(
+      lwr = apply(merBoot$t, MARGIN = 2,
+                  FUN = function(x) {
+                    as.numeric(quantile(x, probs = half_alpha, na.rm = TRUE))
+                  }
+            ),
+      upr = apply(merBoot$t, MARGIN = 2,
+                  FUN = function(x) {
+                    as.numeric(quantile(x, probs = half_alpha_complement, na.rm = TRUE))
+                  }
+            )
+    )
+  )
+}
+
+
 
 ########################  User Interface  ######################################
 

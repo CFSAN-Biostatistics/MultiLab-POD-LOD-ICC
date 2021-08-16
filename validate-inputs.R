@@ -131,16 +131,6 @@ validateData <- function(dat, session) {
 
 #---------------  Specifically for uploaded file  ------------------------------
 
-validateUploadExtension <- function(file_name, session) {
-  file_extension <- tools::file_ext(file_name)
-  validateWithAlert(
-    file_extension %in% c("xlsx", "XLSX"),
-    title = "Uploaded file validation error",
-    text = "Please select a file with extension .xlsx",
-    session = session
-  )
-}
-
 validateUploadSheetNames <- function(wb, session) {
   sheet_names <- openxlsx::getSheetNames(wb)
   validateWithAlert(

@@ -37,7 +37,7 @@ library(ggplot2)
 library(openxlsx)
 library(sessioninfo)
 library(dplyr)
-library(tidyr)  #new
+library(tidyr)
 
 source("helpers.R")
 source("helpers-model.R")
@@ -45,7 +45,7 @@ source("validate-inputs.R")
 
 #global variables
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.5.0"
+glob_app_version <- "v1.5.1"
 
 glob_min_labs     <- 2L
 glob_max_labs     <- 30L

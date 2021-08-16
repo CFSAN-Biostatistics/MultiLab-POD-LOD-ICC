@@ -2,12 +2,13 @@
 
 
 chooseModel <- function(data) {
-  # Returns model type needed (fixed effects or random intercept)
+  # Returns model type needed ("fixed effects" or "random intercept")
   tst_glmer1 <- tryCatch(
-    lme4::glmer(cbind(npos, ntest - npos) ~
-                  offset(log(sample_size)) + offset(log(inoculum)) + (1 | lab_id),
-                data = data, family = binomial(link = cloglog),
-                control = lme4::glmerControl(optimizer = "bobyqa"), nAGQ = 21
+    lme4::glmer(
+      cbind(npos, ntest - npos) ~
+        offset(log(sample_size)) + offset(log(inoculum)) + (1 | lab_id),
+      data = data, family = binomial(link = "cloglog"),
+      control = lme4::glmerControl(optimizer = "bobyqa"), nAGQ = 21
     ),
     error = function(e) e,
     warning = function(w) w
@@ -39,8 +40,9 @@ fitRandomIntercept <- function(data) {
   # Returns fit, parameter estimates, etc. for random intercept model.
   # Gauss-Hermite quadrature (GHQ)
   fit_random <- lme4::glmer(
-    cbind(npos, ntest - npos) ~ offset(log(sample_size)) + offset(log(inoculum)) + (1 | lab_id),
-    data = data, family = binomial(link = cloglog),
+    cbind(npos, ntest - npos) ~
+      offset(log(sample_size)) + offset(log(inoculum)) + (1 | lab_id),
+    data = data, family = binomial(link = "cloglog"),
     control = lme4::glmerControl(optimizer = "bobyqa"), nAGQ = 20
   )
   # Estimate laboratory effects
@@ -72,7 +74,7 @@ fitFixedEffects <- function(data) {
   # Returns fit, parameter estimates, etc. for fixed effects model.
   fit_fixed <- stats::glm(cbind(npos, ntest - npos) ~
       offset(log(sample_size)) + offset(log(inoculum)),
-    data = data, family = binomial(link = cloglog)
+    data = data, family = binomial(link = "cloglog")
   )
   # Estimate laboratory effects
   summary_fit <- summary(fit_fixed)
