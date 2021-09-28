@@ -45,7 +45,7 @@ source("validate-inputs.R")
 
 #global variables
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.5.1"
+glob_app_version <- "v1.5.2"
 
 glob_min_labs     <- 2L
 glob_max_labs     <- 30L

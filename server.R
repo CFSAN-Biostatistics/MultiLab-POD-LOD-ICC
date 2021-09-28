@@ -279,7 +279,7 @@ server <- function(input, output, session) {
       microorganism <- exp_desc$Microorganism
       matrix        <- exp_desc$Food_matrix
       sample_size   <- exp_desc$`Test_portion_size_(g_or_mL)`
-      num_labs      <- max(data_input$Lab_Number)
+      num_labs      <- length(unique(data_input$Lab_Number))
       num_levels    <- ncol(inoc_levels)
       lab_ids       <- data_input$Lab_Number
       lab_names     <- data_input$Lab_Name
