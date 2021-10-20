@@ -66,12 +66,12 @@ validateData <- function(dat, session) {
   # Validate user lab-level data.
   input_error <- "Lab-level data error"
   sum_data <- stats::aggregate(dat, by = list(dat$lab_id), FUN = sum)
-  validateWithAlert(
-    all(!is.na(dat)),
-    title = input_error,
-    text = "Some data are missing or non-numeric.",
-    session = session
-  )
+  # validateWithAlert(
+  #   all(!is.na(dat)),
+  #   title = input_error,
+  #   text = "Some data are missing or non-numeric.",
+  #   session = session
+  # )
   validateWithAlert(
     all(dat >= 0),
     title = input_error,
@@ -82,17 +82,31 @@ validateData <- function(dat, session) {
   dat_other_inoc <- dat[duplicated(dat$lab_id), ] %>%
     dplyr::group_by(lab_id) %>%
     summarize(
-      are_all_pos    = all(inoculum > 0),
-      num_pos_levels = length(inoculum),
-      are_all_unique = num_pos_levels == length(unique(inoculum))
+      are_all_nonneg    = all(inoculum >= 0),
+      num_nonneg_levels = length(inoculum),
+      num_pos_levels = length(inoculum[inoculum > 0]),
+      are_all_unique = num_nonneg_levels == length(unique(inoculum))
+      # are_all_pos    = all(inoculum > 0),
+      # num_pos_levels = length(inoculum),
+      # are_all_unique = num_pos_levels == length(unique(inoculum))
     )
+  # validateWithAlert(
+  #   all(dat_first_inoc == 0) && all(dat_other_inoc$are_all_pos) &&
+  #     all(dat_other_inoc$num_pos_levels >= 2) && all(dat_other_inoc$are_all_unique),
+  #   title = input_error,
+  #   text = paste(
+  #     "The first inoculation (dilution) level in each lab must be zero (0).",
+  #     "The other levels must be a minimum of two (2) positive unique values."
+  #   ),
+  #   session = session
+  # )
   validateWithAlert(
-    all(dat_first_inoc == 0) && all(dat_other_inoc$are_all_pos) &&
+    all(dat_first_inoc == 0) && all(dat_other_inoc$are_all_nonneg) &&
       all(dat_other_inoc$num_pos_levels >= 2) && all(dat_other_inoc$are_all_unique),
     title = input_error,
     text = paste(
       "The first inoculation (dilution) level in each lab must be zero (0).",
-      "The other levels must be a minimum of two (2) positive unique values."
+      "The other levels must contain a minimum of two (2) positive unique values."
     ),
     session = session
   )

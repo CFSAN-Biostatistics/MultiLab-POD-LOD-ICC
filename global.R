@@ -45,7 +45,7 @@ source("validate-inputs.R")
 
 #global variables
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.5.2"
+glob_app_version <- "v1.6.0"
 
 glob_min_labs     <- 2L
 glob_max_labs     <- 30L
@@ -131,3 +131,4 @@ colnames(dat_example_ui) <- c(
   "Lab Name", "Inoculation Level",
   "Inoculated Tubes", "Positive Tubes"
 )
+

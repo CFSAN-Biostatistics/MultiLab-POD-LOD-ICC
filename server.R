@@ -205,6 +205,7 @@ server <- function(input, output, session) {
     counts2$ntest       <- as.integer(counts2$ntest)
     counts2$npos        <- as.integer(counts2$npos)
     counts2$sample_size <- as.numeric(counts2$sample_size)
+    counts2 <- na.omit(counts2)
     validateData(counts2, session = session)
     return(
       list(description = description, inoc_levels = inoc_levels,
@@ -220,7 +221,7 @@ server <- function(input, output, session) {
     num_dils <- length(unique(dat$inoculum))
     dat$sample_size <- NULL
     dat$lab_id <- paste("Lab", dat$lab_id)
-    dat$lab_id[1:nrow(dat) %% num_dils != 1] <- ""
+    dat$lab_id[duplicated(dat$lab_id)] <- ""
     colnames(dat) <- c("Lab Name", "Inoculation Level", "Inoculated Tubes", "Positive Tubes")
     return(dat)
   })
