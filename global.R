@@ -32,6 +32,7 @@ library(shinyjs)
 library(shinyWidgets)
 library(shinyalert)
 library(shinybusy)
+library(shinyvalidate)  #New!!!
 library(lme4)
 library(ggplot2)
 library(openxlsx)
@@ -39,32 +40,27 @@ library(sessioninfo)
 library(dplyr)
 library(tidyr)
 
-source("helpers.R")
-source("helpers-model.R")
-source("validate-inputs.R")
-
 #global variables
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.6.0"
+glob_app_version <- "v1.7.0"
 
 glob_min_labs     <- 2L
 glob_max_labs     <- 30L
-#glob_max_labs <- 3  #for testing only!!!
+#glob_max_labs <- 4  #for testing only!!!
 glob_default_labs <- 2L
-glob_panel_names  <- paste0("panel_lab", 1:glob_max_labs)  #see singleWellPanel()
+glob_panel_names <- paste0("lab", 1:glob_max_labs, "-panel")
 
 glob_min_levels <- 3L
 #glob_min_levels <- 2L  #for testing only!!!
 glob_max_levels <- 12L
-#glob_max_levels <- 3L  #for testing only!!!
+#glob_max_levels <- 4L  #for testing only!!!
 
 glob_default_levels <- 3L
 
 glob_min_size     <- 0
-glob_default_size <- 25  #Sample (test portion) size in g or ml
+glob_default_size <- 25  #sample (test portion) size in g or ml
 
 glob_plot_aspect_ratio <- 0.45
-
 
 glob_log_mean_effect_desc <- span(
   withMathJax(HTML("Mean Lab Effect \\((\\widehat{\\mu}\\))")),
@@ -111,24 +107,17 @@ glob_sample_size_example <- 25
 glob_sample_unit_example <- "g or mL"
 glob_num_labs_example    <- 10
 glob_num_levels_example  <- length(d)
+lab_ids <- rep(1:glob_num_labs_example, each = glob_num_levels_example)
 dat_example <- data.frame(
-  lab_id = rep(1:glob_num_labs_example, each = glob_num_levels_example),
-  inoculum = rep(d, 5),
+  lab_id = lab_ids,
+  lab_name = paste("Lab", lab_ids),
+  inoculum = glob_sample_size_example * rep(d, 5),
+  inoculum_per_unit = rep(d, 5),
   ntest = as.integer(c(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10)),
   npos  = as.integer(c(y1, y2, y3, y4, y5, y6, y7, y8, y9, y10))
 )
 
 dat_example$sample_size <- glob_sample_size_example
-rm(d, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10)
+rm(d, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, lab_ids)
 rm(y1, y2, y3, y4, y5, y6, y7, y8, y9, y10)
-
-dat_example_ui <- dat_example
-dat_example_ui$sample_size <- NULL
-dat_example_ui$lab_id <- paste("Lab", dat_example_ui$lab_id)
-dat_example_ui$lab_id[1:nrow(dat_example_ui) %% 5 != 1] <- ""
-
-colnames(dat_example_ui) <- c(
-  "Lab Name", "Inoculation Level",
-  "Inoculated Tubes", "Positive Tubes"
-)
 

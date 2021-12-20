@@ -2,12 +2,33 @@
 /*  CSS Styling for the MultiLab POD/LOD/ICC app  */
 /**************************************************/
 
+/*https://css-tricks.com/quick-css-trick-how-to-center-an-object-exactly-in-the-center/*/
+#shiny-notification-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+body {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+}
+
 .bold {
   font-weight: bold;
 }
 
 .italic {
   font-style: italic;
+}
+
+::placeholder {
+  color: #555555 !important;
+}
+
+.shiny-validation-message {
+  font-size: 18px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
 }
 
 /******************************************************************************/
@@ -18,8 +39,9 @@
   font-size: 18px;
 }
 
-#lod_choice-label, #conf_level-label {
+.sidebar-select {
   font-size: 18px;
+  width: 70% !important;
 }
 
 #mail_to {
@@ -51,8 +73,9 @@
   height: 20px;
 }
 
-#swal2-content {
-  font-size: 20px;
+#progress_alert-title {
+  font-size: 24px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
 }
 
 .creating-report {
@@ -61,104 +84,168 @@
 }
 
 .alert-text {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+  font-size: 20px;
+  color: black;
+  text-align: left;
+}
+
+.alert-text ::marker {
+  font-size: 150%;
+}
+
+
+/*-----------  Choose data entry method (dataChoicesInput() module)  ---------*/
+
+.data-choices-label {
+  font-size: 24px !important;
+}
+
+.data-choices-button button {
+  border-style: solid;
+  border-color: grey;
+  border-width: medium;
+  border-radius: 5px;
+}
+
+.data-choices-button button.focus {
+  border-color: #70c6ff;
+  border-width: medium;
+  box-shadow: 0px 0px 1px 1px #70c6ff;
+}
+
+.data-choices-button button.active {
+  border-color: black;
+  border-width: medium;
+  box-shadow: 0px 0px 1px 1px #555555;
+}
+
+.data-choices-button button .choose-data-entry-text {
   font-size: 20px;
   color: black;
 }
 
-
-/*-------------------------  Choose data entry method  -----------------------*/
-
-#choose_data_entry-label {
-  font-size: 24px;
-}
-
-#choose_data_entry .btn-group {
-  border-style: solid;
-  border-color: black;
-  border-radius: 10px;
-}
-
-.choose-data-entry-text {
-  font-size: 20px;
+.data-choices-button button.active .choose-data-entry-text {
+  font-size: 22px;
 }
 
 
 /*----------------------------  Manual data entry ----------------------------*/
 
-#experiment_description {
-  color:white; background:midnightblue; border-color:black; border-width:3px
+#manual_data_panel {
+  margin: 0px;
 }
 
-/*typed text font & background*/
-#exp_name, #exp_date, #matrix, #microorganism, #num_labs, #num_levels, #sample_size {
-  background-color: white;
+/* experimentDescriptionInput() module */
+.description-title {
+  color: black;
+  font-size: 28px;
+  font-weight: bold;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+}
+
+.experiment-description {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+  text-align: center;
+  background: midnightblue;
+  padding: 30px !important;
+}
+.experiment-description > div.row > div {
+  padding: 15px !important;
+}
+.experiment-description .experiment-description-inner {
+  min-width: 275px;
+}
+.experiment-description .inside-panel {
+  background: #70c6ff;
+  margin: 0px !important;
+}
+.experiment-description .inside-panel label {
+  color: black;
+  font-size: 20px;
+}
+.experiment-description .inside-panel .form-control {
   color: black;
   font-size: 18px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
   text-align: center;
 }
 
-/*placeholder fonts*/
-#exp_name::placeholder, #exp_date::placeholder, #matrix::placeholder,
-  #microorganism::placeholder, #sample_size::placeholder {
-    color: dimgrey;
-    font-size: 18px;
-    text-align: center;
-  }
 
-#exp_description_left, #exp_description_right {
-  color: white;
-  background: steelblue;
-}
-
-#exp_name-label, #exp_date-label, #matrix-label, #microorganism-label,
-  #num_labs-label, #num_levels-label, #sample_size-label {
-    font-size: 20px;
-  }
-
+/* labLevelInput() module */
 .lab-well {
-  color: white;
+  color: black;
   font-size: 22px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
   background: steelblue;
   border-color: black;
   border-width: 3px;
 }
 
-.lab-well-top > input {
-  background-color: white;
+.lab-name > label {
+  color: black;
+  font-size: 20px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+  float: left;
+  font-weight: normal;
+  padding-right: 10px;
+}
+
+.lab-name > input {
   color: black;
   font-size: 18px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+  background-color: white;
+  width: 50%;
+  min-width: 250px;
 }
 
 .lab-well-column-names {
-  color: white;
+  color: black;
   font-size: 20px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
   line-height: 1.1;
+  display: block;
+  padding-bottom: 3px;
 }
 
 .lab-well-inner {
-  background: lightblue;
-  border-width: 0px;
-  margin-bottom: 0px;
+  background: #70c6ff;
+  border: 2px solid black;
+  border-radius: 10px;
+  min-width: 275px;
 }
 
-.lab-well-inner-data > .input-group > input {
+.lab-well-inner-data > label {
+  float: left;
+}
+
+.lab-well-inner-data input {
   background-color: white;
   color: black;
   font-size: 18px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+  text-align: center;
 }
 
 .fill-labs {
-  color: white;
+  display: block;
+  color: black;
   font-size: 18px;
-  background-color: #707070;
-  border-color: black;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+  background-color: #dddddd;
+  border: 2px solid black;
+  border-radius: 6px;
   margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 2px 2px 3px #555555;
 }
 
 
 /*------------------------------  File upload  -------------------------------*/
 
-#download_template {
+.download-template {
   font-size: 20px;
   color: black;
   margin-bottom: 25px;
@@ -169,7 +256,7 @@
   text-decoration: underline;
 }
 
-#upload_file-label {
+#upload_file-upload_data-label {
   font-size: 22px;
   font-weight: bold;
   margin-bottom: 10px;
@@ -190,10 +277,6 @@
   box-shadow: 0px 0px 5px;
 }
 
-input::placeholder {
-  font-size: 20px;
-  color: #273746 !important;
-}
 .form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {
   background-color: white;
   margin: 4px;
@@ -216,18 +299,34 @@ input::placeholder {
 }
 
 
-/*-----------------  Calculate button & Notes/Instructions -------------------*/
+/*-----------  LOD Units, Calculate button, & Notes/Instructions -------------*/
 
-#lod_unit-label {
-  font-size: 24px;
-}
-
-#lod_unit {
+.lod-unit-buttons {
   font-size: 22px;
 }
 
+.lod-unit-buttons button {
+  font-size: 20px !important;
+}
+
 .fa-circle {
-  color: "#003152";  /* also data entry method */
+  color: #003152;  /* also data entry method */
+}
+
+.calculate-button {
+  color: black !important;
+  font-size: 26px !important;
+  font-weight: bold;
+  border: 3px solid black;
+  box-shadow: 5px 5px 8px #555555;
+  margin: 10px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  max-width: 300px;
+}
+
+button.action-button.bttn.bttn-gradient.bttn-lg.bttn-success:active {
+  transform: translate(6px, 6px);
 }
 
 .notes-title {
@@ -254,13 +353,29 @@ input::placeholder {
 }
 
 
-
 /******************************************************************************/
 /*------------------------------  Results tab  -------------------------------*/
 /******************************************************************************/
 
+.download-results {
+  color: black !important;
+  font-size: 24px !important;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  background-color: #dddddd !important;
+  border: 3px solid black;
+  border-radius: 10px;
+  margin: 10px;
+  margin-top: 20px;
+  box-shadow: 5px 5px 8px #555555;
+}
+
+.download-results.disabled {
+  opacity: 0.5;
+}
+
 #mod {
   font-size: 24px;
+  margin-bottom: 20px;
 }
 
 .results-title {
@@ -303,6 +418,10 @@ input::placeholder {
 .warning {
   font-size: 150%;
   color: red;
+}
+
+.warning ::marker {
+  font-size: 150%;
 }
 
 
