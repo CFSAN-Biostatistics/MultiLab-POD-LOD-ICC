@@ -1,6 +1,6 @@
 ---
 
-## **Introduction**
+## **Introduction (v1.7.0)**
 
 This is a Shiny app for interlaboratory microbiological method validation studies. Please <ins>[visit the deployed app](https://multi-lab.galaxytrakr.org/)</ins> to see it in action.
 
