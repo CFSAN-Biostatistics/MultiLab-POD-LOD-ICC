@@ -33,7 +33,6 @@ podLod <- function(run_analysis, dat_list, fitted_model, n_sim, session) {
         id = "progress_alert", title = "Fitting random intercept model",
         value = 0, display_pct = TRUE
       )
-
       lab_effects <- labEffectsRE(fit1, lab_names, mu_log_se)
       is_LOD_error <- isErrorLODRE(fit1, lod_prob, sample_size, dat$inoculum_per_unit)
       if (is_LOD_error) {

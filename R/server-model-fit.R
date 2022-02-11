@@ -76,7 +76,7 @@ fitModel <- function(dat, session) {
 #
 # # For testing uploaded data files
 # library(shiny)
-# source("R/helpers-model.R")
+# #source("R/helpers-model.R")
 # source("R/helpers-validate-inputs.R")
 # source("R/mod-data-input-upload.R")
 # modelFitApp <- function() {

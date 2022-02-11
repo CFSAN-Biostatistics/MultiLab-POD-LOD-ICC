@@ -2,8 +2,27 @@
 
 my_references <- tabItem(
   tabName = "references",
-  h2(strong("References")),
+  p(HTML(
+    'To cite this app in publications, please use:'
+    ),
+    class = "references-body", style = "padding: 10px; "
+  ),
+  tags$ul(
+    tags$li(
+      p(HTML(
+        '<div>',
+          'Wang SS, Ihrie J (2021).',
+          '<strong>On the estimation of POD and LOD of qualitative microbiological',
+          'assays from a multi-laboratory validation study.</strong>',
+          '<i>Journal of AOAC International</i>,',
+          'https://doi.org/10.1093/jaoacint/qsab130',
+        '</div>'
+      ))
+    ),
+    class = "references-body"
+  ),
   br(),
+  h2(strong("Other References")),
   tags$ol(
     tags$li(
       p(HTML(
@@ -60,17 +79,6 @@ my_references <- tabItem(
           '</strong>',
           '<i>The American Statistician</i>, 37(3), 221–224.',
         '</div>'
-      ))
-    ),
-    tags$li(
-      p(HTML(
-        '<div>',
-          'Wang S, Ihrie J (2021).',
-          '<strong>',
-            'On the estimation of POD and LOD of qualitative microbiological',
-            'assays from a multi-laboratory validation study.',
-          '</strong>',
-          '<i>Journal of AOAC International</i>.'
       ))
     ),
   class = "references-body"

@@ -101,32 +101,32 @@ body {
   font-size: 24px !important;
 }
 
-.data-choices-button button {
+button.btn-data-choices-button {
   border-style: solid;
   border-color: grey;
   border-width: medium;
   border-radius: 5px;
 }
 
-.data-choices-button button.focus {
+button.btn-data-choices-button.focus {
   border-color: #70c6ff;
   border-width: medium;
   box-shadow: 0px 0px 1px 1px #70c6ff;
 }
 
-.data-choices-button button.active {
+button.btn-data-choices-button.active {
   border-color: black;
   border-width: medium;
   box-shadow: 0px 0px 1px 1px #555555;
 }
 
-.data-choices-button button .choose-data-entry-text {
-  font-size: 20px;
-  color: black;
+button.btn-data-choices-button {
+  font-size: 20px !important;
+  color: black !important;
 }
 
-.data-choices-button button.active .choose-data-entry-text {
-  font-size: 22px;
+button.btn-data-choices-button.active {
+  font-size: 22px !important;
 }
 
 

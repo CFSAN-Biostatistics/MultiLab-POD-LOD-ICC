@@ -32,7 +32,7 @@ library(shinyjs)
 library(shinyWidgets)
 library(shinyalert)
 library(shinybusy)
-library(shinyvalidate)  #New!!!
+library(shinyvalidate)
 library(lme4)
 library(ggplot2)
 library(openxlsx)
@@ -42,7 +42,7 @@ library(tidyr)
 
 #global variables
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.7.0"
+glob_app_version <- "v1.8.0"
 
 glob_min_labs     <- 2L
 glob_max_labs     <- 30L

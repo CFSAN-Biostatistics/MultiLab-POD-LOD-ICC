@@ -9,6 +9,10 @@ notes <- shinydashboard::box(
     '
     <ul class = "notes-body">
       <li class = "notes-li">
+        To cite this app in publications, please see the
+        <strong>References</strong> tab.
+      </li>
+      <li class = "notes-li">
         Please do not use the back arrow in your browser. Use the
         refresh button instead.
       </li>

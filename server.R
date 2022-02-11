@@ -107,6 +107,7 @@ server <- function(input, output, session) {
   #   )
   # })
 
+
   #----------------------  Model Fitting & POD/LOD  ----------------------------
 
   model_fit <- eventReactive(dat(), {
@@ -132,108 +133,112 @@ server <- function(input, output, session) {
     podLod(start_analysis(), dat(), model_fit(), n_sim = 500, session)
   })
 
+
   #----------------------  Model Parameter Estimates  --------------------------
 
-  observeEvent(POD_LOD(), {
-    output$log_mean_effect <- renderValueBox({
-      valueBox(
-        value = glob_log_mean_effect_desc,
-        subtitle = HTML(
-          "<span class='parameter-estimates-value'>",
-            model_fit()$mu_log_char,
-          "</span>"
-        ),
-        width = 12, icon = NULL, color = "navy"
-      )
-    })
-
-    output$se_log_mean_effect <- renderValueBox({
-      valueBox(
-        value = glob_se_log_mean_effect_desc,
-        subtitle = HTML(
-          "<span class='parameter-estimates-value'>",
-            model_fit()$mu_log_se_char,
-          "</span>"
-        ),
-        width = 12, icon = NULL, color = "navy"
-      )
-    })
-
-    output$sigma <- renderValueBox({
-      valueBox(
-        value = glob_sigma_desc,
-        subtitle = HTML(
-          "<span class='parameter-estimates-value'>",
-            model_fit()$sigma_char,
-          "</span>"
-        ),
-        width = 12, icon = NULL, color = "navy"
-      )
-    })
-
-    output$ICC <- renderValueBox({
-      valueBox(
-        value = glob_ICC_desc,
-        subtitle = HTML(
-          "<span class='parameter-estimates-value'>",
-            model_fit()$ICC_char,
-          "</span>"
-        ),
-        width = 12, icon = NULL, color = "maroon"
-      )
-    })
-
-    output$LOD <- renderValueBox({
-      valueBox(
-        value = HTML(
-          "<span class='lod-estimates-description'>",
-            paste0("LOD<sub>", start_analysis()$lod_perc, "</sub>"),
-          "</span>"
-        ),
-        subtitle = HTML(
-          "<span class='lod-estimates-value'>",
-            POD_LOD()$LOD_char,
-          "</span>"
-        ),
-        width = 12, icon = NULL, color = "blue"
-      )
-    })
-
-    output$LOD_LCL <- renderValueBox({
-      valueBox(
-        value = HTML(
-          "<span class='lod-estimates-description'>",
-            paste0("LOD<sub>", start_analysis()$lod_perc, "</sub>"),
-            start_analysis()$conf_level, "LCL",
-          "</span>"
-        ),
-        subtitle = HTML(
-          "<span class='lod-estimates-value'>",
-            POD_LOD()$LOD_L_char,
-          "</span>"
-        ),
-        width = 12, icon = NULL, color = "blue"
-      )
-    })
-
-    output$LOD_UCL <- renderValueBox({
-      valueBox(
-        value = HTML(
-          "<span class='lod-estimates-description'>",
-            paste0("LOD<sub>", start_analysis()$lod_perc, "</sub>"),
-            start_analysis()$conf_level, "UCL",
-          "</span>"
-        ),
-        subtitle = HTML(
-          "<span class='lod-estimates-value'>",
-            POD_LOD()$LOD_U_char,
-          "</span>"
-        ),
-        width = 12, icon = NULL, color = "blue"
-      )
-    })
-
+  output$log_mean_effect <- renderValueBox({
+    valueBox(
+      value = glob_log_mean_effect_desc,
+      subtitle = HTML(
+        "<span class='parameter-estimates-value'>",
+          model_fit()$mu_log_char,
+        "</span>"
+      ),
+      width = 12, icon = NULL, color = "navy"
+    )
   })
+
+  output$se_log_mean_effect <- renderValueBox({
+    valueBox(
+      value = glob_se_log_mean_effect_desc,
+      subtitle = HTML(
+        "<span class='parameter-estimates-value'>",
+          model_fit()$mu_log_se_char,
+        "</span>"
+      ),
+      width = 12, icon = NULL, color = "navy"
+    )
+  })
+
+  output$sigma <- renderValueBox({
+    valueBox(
+      value = glob_sigma_desc,
+      subtitle = HTML(
+        "<span class='parameter-estimates-value'>",
+          model_fit()$sigma_char,
+        "</span>"
+      ),
+      width = 12, icon = NULL, color = "navy"
+    )
+  })
+
+  output$ICC <- renderValueBox({
+    valueBox(
+      value = glob_ICC_desc,
+      subtitle = HTML(
+        "<span class='parameter-estimates-value'>",
+          model_fit()$ICC_char,
+        "</span>"
+      ),
+      width = 12, icon = NULL, color = "maroon"
+    )
+  })
+
+  output$LOD <- renderValueBox({
+    lod_perc <- start_analysis()$lod_perc
+    valueBox(
+      value = HTML(
+        "<span class='lod-estimates-description'>",
+          paste0("LOD<sub>", lod_perc, "</sub>"),
+        "</span>"
+      ),
+      subtitle = HTML(
+        "<span class='lod-estimates-value'>",
+          POD_LOD()$LOD_char,
+        "</span>"
+      ),
+      width = 12, icon = NULL, color = "blue"
+    )
+  })
+
+  output$LOD_LCL <- renderValueBox({
+    lod_perc   <- start_analysis()$lod_perc
+    conf_level <- start_analysis()$conf_level
+    valueBox(
+      value = HTML(
+        "<span class='lod-estimates-description'>",
+          paste0("LOD<sub>", lod_perc, "</sub>"),
+          conf_level, "LCL",
+        "</span>"
+      ),
+      subtitle = HTML(
+        "<span class='lod-estimates-value'>",
+          POD_LOD()$LOD_L_char,
+        "</span>"
+      ),
+      width = 12, icon = NULL, color = "blue"
+    )
+  })
+
+  output$LOD_UCL <- renderValueBox({
+    lod_perc   <- start_analysis()$lod_perc
+    conf_level <- start_analysis()$conf_level
+    valueBox(
+      value = HTML(
+        "<span class='lod-estimates-description'>",
+          paste0("LOD<sub>", lod_perc, "</sub>"),
+          conf_level, "UCL",
+        "</span>"
+      ),
+      subtitle = HTML(
+        "<span class='lod-estimates-value'>",
+          POD_LOD()$LOD_U_char,
+        "</span>"
+      ),
+      width = 12, icon = NULL, color = "blue"
+    )
+  })
+
 
   #-----------------------------  POD Curves  ----------------------------------
 
@@ -278,7 +283,7 @@ server <- function(input, output, session) {
     } else {
       inoc_incr <- 1
     }
-    my_plot <- ggplot(data = dat,
+    my_plot <- ggplot(dat,
         aes(x = inoc_level, y = POD, color = as.factor(lab_id))
       ) +
       geom_point(size = rel(4)) +
@@ -300,7 +305,7 @@ server <- function(input, output, session) {
         color = 'Lab ID', # change legend title
         alt = "Plot of detection probability versus inoculation level."
       )
-    # combine plots
+    # Combine plots
     p.all <- my_plot +
       geom_line(data = predicted_each_lab, aes(x = inoc_level, y = POD)) +
       geom_line(data = predicted_all_labs, aes(x = inoc_level, y = mean_POD),
@@ -310,11 +315,11 @@ server <- function(input, output, session) {
         aes(x = inoc_level, ymin = mean_POD_L, ymax = mean_POD_U),
         fill = "blue4", alpha = 0.5, inherit.aes = FALSE
       )
-    # add LOD and CI
+    # Add LOD and CI
     vjust <- .01 * inoc_max
 
     p.all <- p.all +
-      # do not use aes to avoid double legend
+      # Do not use aes to avoid double legend
       geom_segment(x = LOD_L, xend = LOD_L, y = 0, yend = lod_prob,
         colour = "blue", size = rel(1)
       ) +
@@ -343,7 +348,7 @@ server <- function(input, output, session) {
         label.padding = unit(0.75, "lines"),
         label.r = unit(0.15, "lines"), label.size = 0.5
       )
-    p.all +
+    p.all <- p.all +
       theme(
         aspect.ratio = glob_plot_aspect_ratio,
         axis.title.x = element_text(
@@ -383,11 +388,13 @@ server <- function(input, output, session) {
         plot.title.position = "panel",
         plot.margin = unit(rep(0.25, 4), units = "inches")
       )
+    p.all
   })
 
   output$POD_plots <- renderPlot({
     plotCurves()
   })
+
 
   #---------------  Calculations Complete & Download Results  ------------------
 
@@ -397,8 +404,7 @@ server <- function(input, output, session) {
       title = "Calculations complete!",
       text = span("Results will be loaded momentarily.", class = "alert-text"),
       html = TRUE, type = "success", timer = 0,
-      confirmButtonCol = "#003152",
-      closeOnClickOutside = TRUE
+      confirmButtonCol = "#003152", closeOnClickOutside = TRUE
     )
     shinyjs::delay(3000, {
       shinyjs::enable("spreadsheet-download_results")
@@ -411,4 +417,3 @@ server <- function(input, output, session) {
   )
 
 }
-

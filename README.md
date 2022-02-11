@@ -1,6 +1,6 @@
 ---
 
-## **Introduction (v1.7.0)**
+## **Introduction (v1.8.0)**
 
 This is a Shiny app for interlaboratory microbiological method validation studies. Please <ins>[visit the deployed app](https://multi-lab.galaxytrakr.org/)</ins> to see it in action.
 
@@ -13,6 +13,12 @@ This app implements the random intercept complementary log-log model suggested b
 This app is intended to be an alternative to the tool discussed in Jarvis et al. (2019).
 
 ---
+
+### **Citation**
+
+To cite this app in a publication, please use:
+
+- Wang SS, Ihrie J (2021). On the estimation of POD and LOD of qualitative microbiological assays from a multi-laboratory validation study. *Journal of AOAC International*, https://doi.org/10.1093/jaoacint/qsab130
 
 ### **References**
 
@@ -27,8 +33,8 @@ R version 4.1.1 or higher is needed. The following R packages (available on CRAN
 - shiny (>= v1.7.1)
 - shinydashboard (>= v0.7.2)
 - shinyjs (>= v2.0.0)
-- shinyWidgets (>= v0.6.2)
-- shinyalert (>= v2.0.0)
+- shinyWidgets (>= v0.6.4)
+- shinyalert (>= v3.0.0)
 - shinybusy (>= v0.2.2)
 - shinyvalidate (>= v0.1.1)
 - lme4 (>= v1.1-27.1)

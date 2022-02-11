@@ -152,7 +152,6 @@ ui <- dashboardPage(
   dashboardSidebar(my_sidebar, width = 275),
   dashboardBody(
     shinyjs::useShinyjs(),
-    shinyalert::useShinyalert(),
     shinyWidgets::useSweetAlert(),
     tags$html(lang = "en-US"),
     #https://stackoverflow.com/questions/45706670/shiny-dashboadpage-lock-dashboardheader-on-top
