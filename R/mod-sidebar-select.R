@@ -3,7 +3,8 @@
 
 selectInput_sidebar <- function(my_id, label, choices, selected = NULL) {
   my_dropdown <- selectInput(my_id, label = label,
-    choices = choices, selected = selected
+    choices = choices, selected = selected,
+    selectize = FALSE
   )
   tagAppendAttributes(my_dropdown, class = "sidebar-select")
 }

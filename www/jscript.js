@@ -1,3 +1,21 @@
+/* Run on app startup */
+setTimeout(function() {
+  // Remove focus from tabs panels
+  document.querySelectorAll("[role=\\042tabpanel\\042]").forEach(function(div) {
+    div.removeAttribute("tabindex")
+  })
+  // Make sure links are tabbable
+  document.getElementsByTagName("a").forEach(function(a) {
+    a.setAttribute("tabindex", "0")
+  })
+  // Add "listitem" role attribute to elements in sidebar menu
+  document.getElementsByClassName("sidebar-menu").forEach(function(ul) {
+    ul.children.forEach(function(child) {
+      child.setAttribute("role", "listitem")
+    })
+  })
+}, 500)
+
 
 /* Enforce correct file extension on upload */
 //https://stackoverflow.com/questions/62220495/r-shiny-restrict-fileinput-to-filename-pattern-and-not-just-file-type
@@ -23,5 +41,3 @@ function enforceFileExtension(file_object) {
   }
   return true;
 }
-
-

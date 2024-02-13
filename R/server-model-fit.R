@@ -1,5 +1,3 @@
-
-
 fitModel <- function(dat, session) {
   # Input data: a nonreactive dataframe
   warning_messages <- vector(mode = "character")
@@ -81,7 +79,6 @@ fitModel <- function(dat, session) {
 # source("R/mod-data-input-upload.R")
 # modelFitApp <- function() {
 #   ui <- fluidPage(
-#     shinyalert::useShinyalert(),
 #     shinyjs::useShinyjs(),
 #     includeCSS("www/style.css"),
 #     #verbatimTextOutput("my_data"),

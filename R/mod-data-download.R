@@ -1,4 +1,3 @@
-
 #-----------------------------  Helper functions  ------------------------------
 
 sessionInfo2 <- function() {
@@ -33,7 +32,8 @@ addSheetImage <- function(wb, sheet_name, plot, file_name,
   temp_dir <- tempdir()
   ggplot2::ggsave(filename = file_name,
     path = temp_dir, plot = plot,
-    device = "png", scale = 2, width = plot_width, height = plot_height,
+    device = "png",
+    scale = 2, width = plot_width, height = plot_height,
     units = "in", dpi = 600
   )
   openxlsx::insertImage(wb,
@@ -54,7 +54,9 @@ addSheetImage <- function(wb, sheet_name, plot, file_name,
 downloadResultsUI <- function(id, label = "Download Results") {
   ns <- NS(id)
   downloadButton(
-    ns("download_results"), label = label, class = "download-results"
+    ns("download_results"), label = label, class = "download-results",
+    `aria-label` = "Download results",
+    icon = icon2("download")
   )
 }
 
@@ -74,11 +76,10 @@ downloadResultsServer <- function(id,
       my_session_info <- sessionInfo2()
       output$download_results <- downloadHandler(
         filename = function() {
-          paste0(
-            "MultiLab_POD_LOC_ICC_results_",
-            gsub(":", "_", run_analysis()$date_time, fixed = TRUE),
-            ".xlsx"
-          )
+          date_time <- run_analysis()$date_time
+          date_time <- gsub(":", "-", date_time, fixed = TRUE)
+          date_time <- gsub(" ", "-", date_time, fixed = TRUE)
+          paste0("MultiLab-POD-LOD-ICC-results-", date_time, ".xlsx")
         },
         content = function(file) {
           shinybusy::show_modal_spinner(
@@ -145,7 +146,8 @@ downloadResultsServer <- function(id,
             )
           addSheet(workbook, sheet_name = "Results", data = my_results)
           addSheetImage(workbook, sheet_name = "POD Curves",
-            plot = plotCurves(), file_name = "my_plot.png"
+            plot = plotCurves(),
+            file_name = "my-plot.png"
           )
           my_lab_effects <- POD_LOD()$lab_effects
           my_lab_effects <- dplyr::rename(my_lab_effects,
@@ -176,4 +178,3 @@ downloadResultsServer <- function(id,
     }
   )
 }
-

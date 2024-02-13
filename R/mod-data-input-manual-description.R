@@ -1,4 +1,3 @@
-
 #---------------------  Experiment Description module  -------------------------
 
 experimentDescriptionInput <- function(id,
@@ -8,7 +7,7 @@ experimentDescriptionInput <- function(id,
 
   ns <- NS(id)
   tagList(
-    fluidRow(title, class = "description-title", align = "center"),
+    tags$h2(title, class = "description-title", align = "center"),
     wellPanel(class = "experiment-description",
       fluidRow(
         column(width = 6, align = "center", class = "experiment-description-inner",

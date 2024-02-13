@@ -1,4 +1,3 @@
-
 #----------------------------  Helper functions  -------------------------------
 
 labName <- function(id, lab_number) {
@@ -12,21 +11,17 @@ labName <- function(id, lab_number) {
 # library(shiny)
 # labName(NS("lab1", "lab_name"), 1)
 
-
-labNumeric <- function(id, data_type) {
+labNumeric <- function(id, data_type, aria_label) {
   if (data_type == "inoculum") {
     my_step <- 0.01
-    aria_label <- "inoculum level"
   } else if (data_type == "ntest") {
     my_step <- 1
-    aria_label <- "number of tubes tested"
   } else if (data_type == "npos") {
     my_step <- 1
-    aria_label <- "number of positive tubes"
   } else {
     stop("Problem with labNumeric() helper function.")
   }
-  my_input <- shiny::numericInput(
+  my_input <- numericInput(
     id, label = "", value = 0, min = 0, step = my_step
   )
   my_input <- shiny::tagAppendAttributes(my_input,
@@ -38,31 +33,36 @@ labNumeric <- function(id, data_type) {
   my_input
 }
 
-# labNumeric(NS("lab1", paste0("level", 1)), "inoculum")
-# labNumeric(NS("lab1", paste0("ntest", 1)), "ntest")
-# labNumeric(NS("lab1", paste0("npos", 1)), "npos")
+# labNumeric(NS("lab1", paste0("level", 1)), "inoculum", "my aria label")
+# labNumeric(NS("lab1", paste0("ntest", 1)), "ntest", "my aria label")
+# labNumeric(NS("lab1", paste0("npos", 1)), "npos", "my aria label")
 
 
 addFillButtons <- function(column) {
   # Will not have same namespace as the module
   if (column == "inoculum") {
     fill_button <- actionButton("fill_inoc_level",
-      label = "Fill other labs", class = "fill-labs"
+      label = "Fill other labs", class = "fill-labs",
+      `aria-label` = "Fill inoculum level for other labs"
     )
     clear_button <- actionButton("clear_inoc_level",
-      label = "Clear other labs", class = "fill-labs"
+      label = "Clear other labs", class = "fill-labs",
+      `aria-label` = "Clear inoculum level for other labs"
     )
   } else if (column == "tested") {
     fill_button <- actionButton("fill_ntubes",
-      label = "Fill other labs", class = "fill-labs"
+      label = "Fill other labs", class = "fill-labs",
+      `aria-label` = "Fill number of inoculated tubes for other labs"
     )
     clear_button <- actionButton("clear_ntubes",
-      label = "Clear other labs", class = "fill-labs"
+      label = "Clear other labs", class = "fill-labs",
+      `aria-label` = "Clear number of inoculated tubes for other labs"
     )
   } else if (column == "positive") {
     fill_button <- NULL
     clear_button <- actionButton("clear_npos",
-      label = "Clear other labs", class = "fill-labs"
+      label = "Clear other labs", class = "fill-labs",
+      `aria-label` = "Clear number of positive tubes for other labs"
     )
   } else {
     stop("Problem with addFillButtons() helper function.")
@@ -95,7 +95,8 @@ labLevelInput <- function(id, max_levels, default_levels) {
         ),
         #https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
         lapply(level_indices, function(i) {
-          my_input <- labNumeric(ns(paste0("level", i)), "inoculum")
+          aria_label <- paste("inoculum level", i, "for lab", lab_number)
+          my_input <- labNumeric(ns(paste0("level", i)), "inoculum", aria_label)
           if (i > default_levels) {
             shinyjs::hidden(my_input)
           } else {
@@ -110,7 +111,8 @@ labLevelInput <- function(id, max_levels, default_levels) {
           tags$span("inoculated tubes?", class = "lab-well-column-names")
         ),
         lapply(level_indices, function(i) {
-          my_input <- labNumeric(ns(paste0("ntest", i)), "ntest")
+          aria_label <- paste0("number of tubes tested for lab ", lab_number, ", level ", i)
+          my_input <- labNumeric(ns(paste0("ntest", i)), "ntest", aria_label)
           if (i > default_levels) {
             shinyjs::hidden(my_input)
           } else {
@@ -125,7 +127,8 @@ labLevelInput <- function(id, max_levels, default_levels) {
           tags$span("positive tubes?", class = "lab-well-column-names")
         ),
         lapply(level_indices, function(i) {
-          my_input <- labNumeric(ns(paste0("npos", i)), "npos")
+          aria_label <- paste0("number of positive tubes for lab ", lab_number, ", level ", i)
+          my_input <- labNumeric(ns(paste0("npos", i)), "npos", aria_label)
           if (i > default_levels) {
             shinyjs::hidden(my_input)
           } else {

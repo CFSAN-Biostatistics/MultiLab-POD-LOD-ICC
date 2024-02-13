@@ -29,8 +29,6 @@
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
-library(shinyWidgets)
-library(shinyalert)
 library(shinybusy)
 library(shinyvalidate)
 library(lme4)
@@ -40,20 +38,43 @@ library(sessioninfo)
 library(dplyr)
 library(tidyr)
 
-#global variables
+###################################################
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.8.0"
+glob_app_version <- "v1.9.0"
+###################################################
+
+source("R/helpers-element-modifications.R")
+source("R/helpers-validate-inputs.R")
+source("R/mod-data-choices.R")
+source("R/mod-data-download.R")
+source("R/mod-data-input-manual-description.R")
+source("R/mod-data-input-manual.R")
+source("R/mod-data-input-upload.R")
+source("R/mod-run-analysis.R")
+source("R/mod-sidebar-select.R")
+source("R/server-model-fit-helpers.R")
+source("R/server-model-fit.R")
+source("R/server-pod-lod-helpers.R")
+source("R/server-pod-lod.R")
+source("R/ui-analysis-details.R")
+source("R/ui-notes-and-instructions.R")
+source("R/ui-references.R")
+
+# Query string to assure that browser re-downloads CSS & JS if version changes.
+# https://stackoverflow.com/a/3467009
+# https://stackoverflow.com/a/40943563
+# https://stackoverflow.com/questions/3929064/whats-a-querystring-doing-in-this-stylesheets-href
+version_number <- sub("v", replacement = "", x = glob_app_version)
+glob_css_query <- paste0("style.css?v=", version_number)
+glob_js_query  <- paste0("jscript.js?v=", version_number)
 
 glob_min_labs     <- 2L
 glob_max_labs     <- 30L
-#glob_max_labs <- 4  #for testing only!!!
 glob_default_labs <- 2L
 glob_panel_names <- paste0("lab", 1:glob_max_labs, "-panel")
 
 glob_min_levels <- 3L
-#glob_min_levels <- 2L  #for testing only!!!
 glob_max_levels <- 12L
-#glob_max_levels <- 4L  #for testing only!!!
 
 glob_default_levels <- 3L
 
@@ -64,6 +85,7 @@ glob_plot_aspect_ratio <- 0.45
 
 glob_log_mean_effect_desc <- span(
   withMathJax(HTML("Mean Lab Effect \\((\\widehat{\\mu}\\))")),
+  id = "log_mean_effect_desc",
   class = 'parameter-estimates-description'
 )
 glob_se_log_mean_effect_desc <- span(
@@ -72,6 +94,7 @@ glob_se_log_mean_effect_desc <- span(
 )
 glob_sigma_desc <- span(
   withMathJax(HTML("SD of Lab Effects \\((\\widehat{\\sigma}\\))")),
+  id = "sigma_desc",
   class = 'parameter-estimates-description'
 )
 glob_ICC_desc <- span(
@@ -120,4 +143,3 @@ dat_example <- data.frame(
 dat_example$sample_size <- glob_sample_size_example
 rm(d, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, lab_ids)
 rm(y1, y2, y3, y4, y5, y6, y7, y8, y9, y10)
-

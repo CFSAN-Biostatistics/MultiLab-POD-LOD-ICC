@@ -2,9 +2,9 @@
 
 notes <- shinydashboard::box(
   width = 12, status = "info",
-  title = span("Notes", class = "notes-title"),
+  title = "Notes",
   solidheader = FALSE, background = NULL,
-  collapsible = TRUE, collapsed = FALSE,
+  collapsible = FALSE,
   HTML(
     '
     <ul class = "notes-body">
@@ -34,11 +34,16 @@ notes <- shinydashboard::box(
   )
 )
 
+notes$attribs$role <- "note"
+notes$attribs$tabindex <- "0"
+notes$children[[1]]$children[[1]]$children[[1]]$name <- "h2"
+notes$children[[1]]$children[[1]]$children[[1]]$attribs$class <- "notes-title"
+
 data_entry_instructions <- shinydashboard::box(
   title = span("Data Entry Instructions", class = "notes-title"),
   width = 12, status = "info",
   solidheader = FALSE, background = NULL,
-  collapsible = TRUE, collapsed = FALSE,
+  collapsible = FALSE,
   span("Manual entry", class = "notes-subheading"),
   HTML(
     '
@@ -103,11 +108,16 @@ data_entry_instructions <- shinydashboard::box(
   )
 )
 
+data_entry_instructions$attribs$role <- "note"
+data_entry_instructions$attribs$tabindex <- "0"
+data_entry_instructions$children[[1]]$children[[1]]$children[[1]]$name <- "h2"
+data_entry_instructions$children[[1]]$children[[1]]$children[[1]]$attribs$class <- "notes-title"
+
 analysis_instructions <- shinydashboard::box(
   title = span("Analysis Instructions", class = "notes-title"),
   width = 12, status = "info",
   solidheader = FALSE, background = NULL,
-  collapsible = TRUE, collapsed = FALSE,
+  collapsible = FALSE,
   HTML(
     '
     <ol class = "notes-body">
@@ -121,17 +131,16 @@ analysis_instructions <- shinydashboard::box(
       <li class = "notes-li">
         After the calculations are complete, you will be automatically
         re-directed to the <strong>Results</strong> page, which contains
-        a button to download the results and two tabs:
+        a button to download the results and two tabs.
+        The first tab gives estimates of model parameters, ICC, and LOD.
+        The second tab shows a plot of POD versus inoculation level.
       </li>
-        <ol type = "a">
-          <li class = "notes-li">
-            The first tab gives estimates of model parameters, ICC, and LOD.
-          </li>
-          <li class = "notes-li">
-            The second tab shows a plot of POD vs. inoculation level.
-          </li>
-        </ol>
     </ol>
     '
   )
 )
+
+analysis_instructions$attribs$role <- "note"
+analysis_instructions$attribs$tabindex <- "0"
+analysis_instructions$children[[1]]$children[[1]]$children[[1]]$name <- "h2"
+analysis_instructions$children[[1]]$children[[1]]$children[[1]]$attribs$class <- "notes-title"

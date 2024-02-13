@@ -1,15 +1,12 @@
 # Helper functions
 
-modelAlert <- function(warning_messages) {
+modelAlert <- function(warning_messages, session) {
   # Used in server.R
   warnings <- paste0("<li>", warning_messages, "</li>")
   warnings <- paste(warnings, collapse = "")
   warnings <- paste0("<ul>", warnings, "</ul>")
-  shinyalert::shinyalert(
-    title = "Warning",
-    text = tags$div(HTML(warnings), class = "alert-text"),
-    closeOnClickOutside = TRUE,
-    html = TRUE, type = "warning", timer = 0, confirmButtonCol = "#003152"
+  modal("Warning", session,
+    div(HTML(warnings))
   )
 }
 

@@ -2,16 +2,47 @@
 /*  CSS Styling for the MultiLab POD/LOD/ICC app  */
 /**************************************************/
 
-/*https://css-tricks.com/quick-css-trick-how-to-center-an-object-exactly-in-the-center/*/
-#shiny-notification-panel {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.modal-title {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  font-size: 28px !important;
+  font-weight: bold !important;
+}
+
+.modal-body {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  font-size: 20px !important;
+}
+
+.modal-dismiss {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  font-size: 22px !important;
+  color: black;
+}
+
+button {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
 }
 
 body {
-  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  font-size: 1em;
+}
+
+h1 {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+h2 {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+caption {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  color: #555555;
 }
 
 .bold {
@@ -28,23 +59,91 @@ body {
 
 .shiny-validation-message {
   font-size: 18px;
-  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+  color: #990000 !important;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+}
+
+/* https://www.w3.org/WAI/WCAG21/Techniques/css/C40 */
+*:focus {
+	/* inner indicator */
+	outline: 2px #193146 solid !important;
+	outline-offset: 0 !important;
+	/* outer indicator */
+	box-shadow: 0 0 0 4px #F9F9F9 !important;
+}
+
+span:has(> #upload_file-upload_data:focus) {
+	/* inner indicator */
+	outline: 3px #F9F9F9 solid !important;
+	outline-offset: 0 !important;
+	/* outer indicator */
+	box-shadow: 0 0 0 5px #193146!important;
+}
+
+.navbar {
+  background-color: #347da7 !important;
+}
+
+.sidebar-toggle {
+  font-size: 1.5em !important;
 }
 
 /******************************************************************************/
 /*------------------------------  Sidebar  -----------------------------------*/
 /******************************************************************************/
 
+.sidebar a {
+  color: white !important;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+}
+
+.sidebar-menu > li {
+  margin: 8px !important;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+}
+
+.sidebar-menu > li.active > a {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  color: black !important;
+  background: #ecf0f5 !important;
+  border-left-color: white !important;
+}
+
+.logo {
+  background-color: #347da7 !important;
+}
+
 .sidebar-menu {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
   font-size: 18px;
 }
 
 .sidebar-select {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
   font-size: 18px;
   width: 70% !important;
 }
 
+select {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  font-size: 18px !important;
+}
+
+select option {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  font-size: 18px !important;
+}
+
+#app_info {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  font-size: 18px;
+  margin: auto;
+  white-space: normal;
+  text-align: center;
+}
+
 #mail_to {
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
   font-size: 18px;
   font-style: italic;
   margin: auto;
@@ -64,69 +163,47 @@ body {
 
 /*-------------------------  Progress bar & alerts  --------------------------*/
 
-.progress-group {
-  font-size: 22px;
-}
-
-.progress, .progress-bar {
-  font-size: 20px;
-  height: 20px;
-}
-
-#progress_alert-title {
+/*https://css-tricks.com/quick-css-trick-how-to-center-an-object-exactly-in-the-center/*/
+#shiny-notification-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
   font-size: 24px;
-  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  min-width: 600px;
+}
+
+.shiny-notification {
+  opacity: 1 !important;
+}
+
+.progress {
+  height: 25px !important;
+}
+
+.progress-bar {
+  font-size: 20px;
+  line-height: 25px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  min-height: 25px;
 }
 
 .creating-report {
   font-size: 20px;
   color: black;
-}
-
-.alert-text {
-  font-family: 'helvetica neue', helvetica, arial, sans-serif;
-  font-size: 20px;
-  color: black;
-  text-align: left;
-}
-
-.alert-text ::marker {
-  font-size: 150%;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
 }
 
 
 /*-----------  Choose data entry method (dataChoicesInput() module)  ---------*/
 
-.data-choices-label {
-  font-size: 24px !important;
+#choose_data_entry-radio_group-label {
+  font-size: 24px;
 }
 
-button.btn-data-choices-button {
-  border-style: solid;
-  border-color: grey;
-  border-width: medium;
-  border-radius: 5px;
-}
-
-button.btn-data-choices-button.focus {
-  border-color: #70c6ff;
-  border-width: medium;
-  box-shadow: 0px 0px 1px 1px #70c6ff;
-}
-
-button.btn-data-choices-button.active {
-  border-color: black;
-  border-width: medium;
-  box-shadow: 0px 0px 1px 1px #555555;
-}
-
-button.btn-data-choices-button {
-  font-size: 20px !important;
-  color: black !important;
-}
-
-button.btn-data-choices-button.active {
-  font-size: 22px !important;
+.radio-inline {
+  font-size: 20px;
 }
 
 
@@ -242,7 +319,6 @@ button.btn-data-choices-button.active {
   box-shadow: 2px 2px 3px #555555;
 }
 
-
 /*------------------------------  File upload  -------------------------------*/
 
 .download-template {
@@ -254,6 +330,7 @@ button.btn-data-choices-button.active {
 
 .template-link {
   text-decoration: underline;
+  color: #005f9f;
 }
 
 #upload_file-upload_data-label {
@@ -264,17 +341,17 @@ button.btn-data-choices-button.active {
 
 .upload-browse {
   font-size: 22px;
-  color: black;
+  color: white;
 }
 .input-group-btn:first-child>.btn, .input-group-btn:first-child>.btn-group {
+  
   margin-top: -1px;
   margin-bottom: -1px;
   margin-left: -1px;
   margin-right: 0px;
-  border: 3px solid black;
+  border: none;
   border-radius: 6px;
-
-  box-shadow: 0px 0px 5px;
+  background-color: #555555;
 }
 
 .form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {
@@ -301,32 +378,21 @@ button.btn-data-choices-button.active {
 
 /*-----------  LOD Units, Calculate button, & Notes/Instructions -------------*/
 
-.lod-unit-buttons {
-  font-size: 22px;
-}
-
-.lod-unit-buttons button {
-  font-size: 20px !important;
-}
-
-.fa-circle {
-  color: #003152;  /* also data entry method */
+#calculate-lod_unit-label {
+  font-size: 24px;
 }
 
 .calculate-button {
   color: black !important;
   font-size: 26px !important;
   font-weight: bold;
-  border: 3px solid black;
+  border: none;
+  border-radius: 10px;
+  background-color: #199560;
   box-shadow: 5px 5px 8px #555555;
   margin: 10px;
-  margin-top: 20px;
   margin-bottom: 20px;
   max-width: 300px;
-}
-
-button.action-button.bttn.bttn-gradient.bttn-lg.bttn-success:active {
-  transform: translate(6px, 6px);
 }
 
 .notes-title {
@@ -373,6 +439,13 @@ button.action-button.bttn.bttn-gradient.bttn-lg.bttn-success:active {
   opacity: 0.5;
 }
 
+span.help-text {
+  color: #2d2d2d !important;
+  font-size: 18px !important;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  margin: 10px;
+}
+
 #mod {
   font-size: 24px;
   margin-bottom: 20px;
@@ -385,43 +458,55 @@ button.action-button.bttn.bttn-gradient.bttn-lg.bttn-success:active {
 
 .parameter-estimates-clear, .lod-estimates-clear {
   font-size: 60%;
-  font-family: Courier;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
   color: white;
 }
 
 .parameter-estimates-description {
   font-size: 55%;
-  font-family: Courier;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
   color: white;
 }
 
 .parameter-estimates-value {
   font-size: 150%;
   font-weight: bold;
-  font-family: Courier;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
   color: white;
 }
 
 .lod-estimates-description {
   font-size: 60%;
-  font-family: Courier;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
   color: white;
 }
 
 .lod-estimates-value {
   font-size: 150%;
   font-weight: bold;
-  font-family: Courier;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
   color: white;
 }
 
+#log_mean_effect, #se_log_mean_effect, #sigma, #ICC, #LOD, #LOD_LCL, #LOD_UCL {
+  min-width: 300px !important;
+}
+
 .warning {
-  font-size: 150%;
-  color: red;
+  font-size: 22px;
+  color: #a94442;
 }
 
 .warning ::marker {
-  font-size: 150%;
+  font-size: 22px;
+}
+
+#POD_plots_div {
+  overflow-x: auto !important;
+}
+
+#POD_plots {
+  min-width: 800px !important;
 }
 
 

@@ -29,15 +29,16 @@ podLod <- function(run_analysis, dat_list, fitted_model, n_sim, session) {
   mu_log_se     <- fitted_model$mu_log_se
 
   if (model_type == "random intercept") {
-      shinyWidgets::progressSweetAlert(session = session,
-        id = "progress_alert", title = "Fitting random intercept model",
-        value = 0, display_pct = TRUE
-      )
+    withProgress(message = "Fitting random intercept model", session = session, {
+      # See 'server-pod-lod-helpers.R' for use of incProgress()
+      shinyjs::runjs({
+        'document.getElementsByClassName("shiny-notification-close")[0].remove()'
+      })
+      shinyjs::disable(selector = "button[class*='calculate-button']")
       lab_effects <- labEffectsRE(fit1, lab_names, mu_log_se)
       is_LOD_error <- isErrorLODRE(fit1, lod_prob, sample_size, dat$inoculum_per_unit)
       if (is_LOD_error) {
-        lodCalcErrorAlert()
-        shinyWidgets::closeSweetAlert(session)
+        lodCalcErrorAlert(session)
       }
       req(!is_LOD_error)
       LOD <- lodPointRE(fit1,
@@ -49,7 +50,8 @@ podLod <- function(run_analysis, dat_list, fitted_model, n_sim, session) {
         LOD, inoc_max, lab_ids, sample_size, n_sim, alpha_level, session
       )
       LOD_CI <- lodCIRE(predicted_all_labs, lod_prob)
-      shinyWidgets::closeSweetAlert(session)
+      shinyjs::enable(selector = "button[class*='calculate-button']")
+    })
   } else if (model_type == "fixed effects") {
     # Individual intercept and its SE for each lab
     fit2 <- stats::glm(cbind(npos, ntest - npos) ~
@@ -97,7 +99,6 @@ podLod <- function(run_analysis, dat_list, fitted_model, n_sim, session) {
 # source("R/server-pod-lod-helpers.R")
 # lodPodApp <- function() {
 #   ui <- fluidPage(
-#     shinyalert::useShinyalert(),
 #     shinyjs::useShinyjs(),
 #     includeCSS("www/style.css"),
 #     #verbatimTextOutput("my_data"),

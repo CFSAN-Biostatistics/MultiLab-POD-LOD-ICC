@@ -1,5 +1,36 @@
-
 server <- function(input, output, session) {
+  
+  observeEvent(c(input$my_tabs, input$mod), {
+    shinyjs::runjs(
+      'setTimeout(function() {
+        // Remove focus from tab panels
+        document.querySelectorAll("[role=\\042tabpanel\\042]").forEach(function(div) {
+          div.removeAttribute("tabindex")
+        })
+        // Make sure links are focusable & do not have aria-selected attrib
+        document.getElementsByTagName("a").forEach(function(a) {
+          a.setAttribute("tabindex", "0")
+          a.removeAttribute("aria-selected")
+        })
+        // Make sure disabled elements are not focusable
+        document.getElementsByClassName("disabled").forEach(function(dis) {
+          dis.removeAttribute("tabindex")
+        })
+      }, 500)'
+    )
+  })
+
+  observeEvent(c(input$`choose_data_entry-radio_group`, input$`upload_file-upload_data`), {
+    shinyjs::runjs(
+      'setTimeout(function() {
+        // Add scope to table headers
+        document.getElementsByTagName("th").forEach(function(th) {
+          th.setAttribute("scope", "col")
+        })
+      }, 500)'
+    )
+  })
+
 
   #-----------------------------  Data Entry  ----------------------------------
 
@@ -45,7 +76,11 @@ server <- function(input, output, session) {
   )
 
   # Uploaded data
-  data_upload <- uploadDataServer("upload_file")  #see mod-buttons-upload.R
+  data_upload <- uploadDataServer("upload_file", start_analysis)  #see mod-data-input-upload.R
+
+  observeEvent(c(data_upload(), choose_data_entry()), {
+    shinyjs::enable(selector = "button[class*='calculate-button']")
+  })
 
   data_example <- reactive({
     # To harmonize treatment of data in rest of app
@@ -65,19 +100,17 @@ server <- function(input, output, session) {
   output$example_data <- renderTable({
     dat_example_ui <- data_example()$data_model()
     dat_example_ui$sample_size <- NULL
-    dat_example_ui$lab_id[1:nrow(dat_example_ui) %% 5 != 1] <- ""
-    dat_example_ui$lab_name[1:nrow(dat_example_ui) %% 5 != 1] <- ""
     colnames(dat_example_ui) <- c(
       "Lab ID", "Lab Name", "Level Per Portion", "Level Per Unit",
       "Inoculated Tubes", "Positive Tubes"
     )
     dat_example_ui
-  }, striped = TRUE, bordered = TRUE, align = 'c', digits = 2)
-
+  }, striped = TRUE, bordered = TRUE, align = 'c', digits = 2,
+    caption = "Example data"
+  )
 
   dat <- eventReactive(start_analysis(), {
-    shinyjs::disable("calculate-calculate")
-    shinyjs::disable("spreadsheet-download_results")
+    shinyjs::disable(selector = "a[class*='download-results']")
     if (start_analysis()$choose_data_entry == "Manual entry") {
       validateDescription(experiment_description$iv$is_valid(), session)
       validateData(data_manual()$data_model(), session)
@@ -120,11 +153,11 @@ server <- function(input, output, session) {
   output$warning_messages_results_UI <- renderUI({
     warnings <- model_fit()$warnings
     if (length(warnings) > 0) {
-      modelAlert(warnings)
+      modelAlert(warnings, session)
       warnings <- paste0("<li>", warnings, "</li>")
       warnings <- paste(warnings, collapse = "")
       tags$p(div(class = "warning",
-        HTML("<ul><strong>Warnings:</strong>", warnings, "</ul>")
+        HTML("<ul>Warnings:", warnings, "</ul>")
       ))
     }
   })
@@ -145,6 +178,20 @@ server <- function(input, output, session) {
         "</span>"
       ),
       width = 12, icon = NULL, color = "navy"
+    )
+  })
+
+  observeEvent(POD_LOD(), {
+    shinyjs::runjs(
+      'setTimeout(function() {
+        // Change role & tabindex for MathJax spans
+        const muhat = document.getElementById("log_mean_effect_desc").getElementsByClassName("MathJax")[0];
+        muhat.removeAttribute("tabindex");
+        muhat.setAttribute("role", "math");
+        const sigmahat = document.getElementById("sigma_desc").getElementsByClassName("MathJax")[0];
+        sigmahat.removeAttribute("tabindex");
+        sigmahat.setAttribute("role", "math");
+      }, 2000)'
     )
   })
 
@@ -309,7 +356,7 @@ server <- function(input, output, session) {
     p.all <- my_plot +
       geom_line(data = predicted_each_lab, aes(x = inoc_level, y = POD)) +
       geom_line(data = predicted_all_labs, aes(x = inoc_level, y = mean_POD),
-        linetype = "solid", color = "red", size = rel(2)
+        linetype = "solid", color = "red", linewidth = rel(2)
       ) +
       geom_ribbon(data = predicted_all_labs,
         aes(x = inoc_level, ymin = mean_POD_L, ymax = mean_POD_U),
@@ -395,20 +442,15 @@ server <- function(input, output, session) {
     plotCurves()
   })
 
-
   #---------------  Calculations Complete & Download Results  ------------------
 
   observeEvent(plotCurves(), {
     shinydashboard::updateTabItems(session, inputId = "my_tabs", selected = "results")
-    shinyalert::shinyalert(
-      title = "Calculations complete!",
-      text = span("Results will be loaded momentarily.", class = "alert-text"),
-      html = TRUE, type = "success", timer = 0,
-      confirmButtonCol = "#003152", closeOnClickOutside = TRUE
+    modal("Calculations complete!", session,
+      span("Results will be loaded momentarily.")
     )
     shinyjs::delay(3000, {
-      shinyjs::enable("spreadsheet-download_results")
-      shinyjs::enable("calculate-calculate")
+      shinyjs::enable(selector = "a[class*='download-results']")
     })
   })
 

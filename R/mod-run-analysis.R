@@ -1,41 +1,19 @@
-
-#---------------------------  Helper functions  --------------------------------
-
-actionBttn_calculate <- function(my_id) {
-  my_button <- shinyWidgets::actionBttn(my_id,
-    label = "Calculate", icon = icon("calculator"),
-    style = "gradient", color = "success", size = "lg",
-    block = TRUE, no_outline = FALSE
-  )
-  tagAppendAttributes(my_button, class = "calculate-button")
-}
-
-radioGroupButtons_unit <- function(my_id) {
-  my_buttons <- shinyWidgets::radioGroupButtons(my_id,
-    label = "Please choose LOD unit",
-    choices = c("CFU/test portion", "CFU/g", "CFU/mL"),
-    size = "lg", individual = FALSE,
-    checkIcon = list(
-      yes = tags$i(class = "fa fa-circle"),
-      no  = tags$i(class = "fa fa-circle-o")
-    )
-  )
-  tagAppendAttributes(my_buttons, class = "lod-unit-buttons")
-}
-
-
 #---------------  Choose LOD Unit & Calculate buttons  -------------------------
 
 runAnalysisInput <- function(id) {
   ns <- NS(id)
   tagList(
-    radioGroupButtons_unit(ns("lod_unit")),
-    actionBttn_calculate(ns("calculate"))
+    radioButtons(ns("lod_unit"),
+      label = "Please choose LOD unit",
+      choices = c("CFU/test portion", "CFU/g", "CFU/mL"),
+      selected = "CFU/test portion", inline = TRUE
+    ),
+    actionButton(ns("calculate"),
+      label = "Calculate", icon = icon2("calculator"),
+      class = "calculate-button"
+    )
   )
 }
-
-#runAnalysisInput("my_id")
-
 
 runAnalysisServer <- function(id, sidebar_select, choose_data_entry) {
   stopifnot(is.reactive(sidebar_select$lod_choice))
@@ -63,6 +41,7 @@ runAnalysisServer <- function(id, sidebar_select, choose_data_entry) {
 # library(shiny)
 # source("R/mod-sidebar-select.R")
 # source("R/mod-data-choices.R")
+# source("R/helpers-element-modifications.R")
 # runAnalysisApp <- function() {
 #   ui <- fluidPage(
 #     includeCSS("www/style.css"),
@@ -80,15 +59,15 @@ runAnalysisServer <- function(id, sidebar_select, choose_data_entry) {
 #   server <- function(input, output, session) {
 #     choose_data_entry <- dataChoicesServer("choose_data_entry")
 #     my_sidebar_select <- sidebarSelectServer("my_id1")
-#     # output$my_df1 <- renderPrint({
-#     #   list(
-#     #     lod_choice      = my_sidebar_select$lod_choice(),
-#     #     lod_perc        = my_sidebar_select$lod_perc(),
-#     #     lod_prob        = my_sidebar_select$lod_prob(),
-#     #     conf_level      = my_sidebar_select$conf_level(),
-#     #     conf_level_prob = my_sidebar_select$conf_level_prob()
-#     #   )
-#     # })
+#     output$my_df1 <- renderPrint({
+#       list(
+#         lod_choice      = my_sidebar_select$lod_choice(),
+#         lod_perc        = my_sidebar_select$lod_perc(),
+#         lod_prob        = my_sidebar_select$lod_prob(),
+#         conf_level      = my_sidebar_select$conf_level(),
+#         conf_level_prob = my_sidebar_select$conf_level_prob()
+#       )
+#     })
 #     my_calc <- runAnalysisServer("my_id2", my_sidebar_select, choose_data_entry)
 #     output$my_df2 <- renderPrint({
 #       req(my_calc())
@@ -98,4 +77,3 @@ runAnalysisServer <- function(id, sidebar_select, choose_data_entry) {
 #   shinyApp(ui, server)
 # }
 # runAnalysisApp()
-

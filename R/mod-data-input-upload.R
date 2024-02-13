@@ -1,12 +1,10 @@
-
 #https://mastering-shiny.org/scaling-modules.html#scaling-modules
-
 
 #--------------------------  Data upload button  -------------------------------
 
 uploadDataUI <- function(id, label = "Upload Excel file (.xlsx)",
                          multiple = FALSE, accept = ".xlsx", width = "65%",
-                         button_label = span("Browse...", class = "upload-browse"),
+                         button_label = span("Browse files", class = "upload-browse"),
                          placeholder = "No file selected") {
   # https://stackoverflow.com/questions/62220495/r-shiny-restrict-fileinput-to-filename-pattern-and-not-just-file-type
   # https://stackoverflow.com/questions/190852/how-can-i-get-file-extensions-with-javascript
@@ -18,18 +16,19 @@ uploadDataUI <- function(id, label = "Upload Excel file (.xlsx)",
     width = width, buttonLabel = button_label, placeholder = placeholder
   )
   my_input$children[[2]]$children[[1]]$children[[1]]$children[[2]]$attribs$onchange <- onchange
+  my_input$children[[2]]$children[[2]]$attribs$`aria-label` <- "Uploaded file"
   tagList(
     div(class = "download-template",
       "Please",
       a("download the Excel (.xlsx) template",
-        href = "MultiLab_POD_LOD_ICC_template.xlsx",
+        href = "MultiLab-POD-LOD-ICC-template.xlsx",
         download = NA, class = "template-link"
       ),
       " to your hard drive and add your data.",
       p("Then save the file and upload for processing.")
     ),
     my_input,
-    span("Data preview:", style = "font-size: 30px;"),
+    tags$h2("Data Preview"),
     shinydashboard::box(width = 12,
       htmlOutput(ns("uploaded_test_portion"),
         style = "font-size: 22px; margin-bottom: 5px;"
@@ -40,20 +39,25 @@ uploadDataUI <- function(id, label = "Upload Excel file (.xlsx)",
 }
 
 #https://shiny.rstudio.com/articles/modules.html
-uploadDataServer <- function(id) {
+uploadDataServer <- function(id, calc_button) {
   moduleServer(id,
     function(input, output, session) {
 
+      observeEvent(calc_button(), {
+        if (calc_button()$choose_data_entry == "File upload") {
+          validateUploadExistence(!is.null(input$upload_data), session)
+        }
+      })
+
       uploaded_file <- reactive({
         req(input$upload_data)
-        shinyjs::enable("calculate-calculate", asis = TRUE)
         input$upload_data
       })
 
       my_list <- eventReactive(uploaded_file(), {
         # A list of reactives to return
         file_name <- uploaded_file()$name
-        validateExtension(file_name)  #helpers-validate-inputs.R
+        validateExtension(file_name, session)  #helpers-validate-inputs.R
         workbook <- uploaded_file()$datapath
         validateUploadSheetNames(workbook, session)
         description <- openxlsx::read.xlsx(workbook, sheet = "description",
@@ -120,8 +124,6 @@ uploadDataServer <- function(id) {
         validateData(counts2, session = session)
         uploaded_data_for_preview <- counts2
         uploaded_data_for_preview$sample_size <- NULL
-        uploaded_data_for_preview$lab_id[duplicated(uploaded_data_for_preview$lab_id)] <- ""
-        uploaded_data_for_preview$lab_name[duplicated(uploaded_data_for_preview$lab_name)] <- ""
         colnames(uploaded_data_for_preview) <-
           c(
             "Lab ID", "Lab Name", "Level Per Portion", "Level Per Unit",
@@ -147,7 +149,7 @@ uploadDataServer <- function(id) {
         })
         output$uploaded_data_preview <- renderTable({
           my_list()$uploaded_data_for_preview()
-          }, striped = TRUE, bordered = TRUE, align = 'c'
+          }, striped = TRUE, bordered = TRUE, align = 'c', caption = "Uploaded data preview"
         )
       })
 
@@ -162,7 +164,6 @@ uploadDataServer <- function(id) {
 # source("R/helpers-validate-inputs.R")
 # uploadDataApp <- function() {
 #   ui <- fluidPage(
-#     shinyalert::useShinyalert(),
 #     includeCSS("www/style.css"),
 #     shinyjs::useShinyjs(),
 #     fluidRow(align = "center", uploadDataUI("my_id")),
@@ -188,4 +189,3 @@ uploadDataServer <- function(id) {
 #   shinyApp(ui, server)
 # }
 # uploadDataApp()
-

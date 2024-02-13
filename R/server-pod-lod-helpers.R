@@ -15,17 +15,10 @@ isErrorLODRE <- function(fitted_RE_model, lod_prob, sample_size, inoculum_per_un
   methods::is(tst_LOD, "error")
 }
 
-lodCalcErrorAlert <- function() {
-  shinyalert::shinyalert(
-    title = "LOD Calculation Error",
-    text = span(
-      "Possibly due to zero-probability predictions.",
-      class = "alert-text"
-    ),
-    closeOnClickOutside = TRUE, html = TRUE, type = "error", timer = 0,
-    confirmButtonCol = "#003152"
+lodCalcErrorAlert <- function(session) {
+  modal("LOD Calculation Error", session,
+    span("Possibly due to zero-probability predictions.")
   )
-  shinyjs::enable("calculate-calculate")
 }
 
 
@@ -125,18 +118,16 @@ podAllLabsCIRE <- function(fitted_model, n_sim, predicted_all_labs, alpha_level,
   #https://cran.r-project.org/web/packages/merTools/vignettes/Using_predictInterval.html
   #  from link above - similar to Step 3a: lme4::bootMer() method 1
   # Return predicted values from bootstrap
-  shinyWidgets::updateProgressBar(session, id = "progress_alert", value = 40)
   mySumm <- function(.) {
+    incProgress(amount = .9 / n_sim, session = session)
     predict(., newdata = predicted_all_labs, re.form = NA, type = "response")
   }
   # lme4::bootMer() method
   boot1 <- lme4::bootMer(fitted_model,  #~95% of computation time
     FUN = mySumm, nsim = n_sim, seed = 27181, re.form = NA, type = "parametric"
   )
-  shinyWidgets::updateProgressBar(session, id = "progress_alert", value = 95)
   # Collapse bootstrap into 95% PI
   boot1_PI <- sumBoot(boot1, alpha_level)  #~5% of computation time
-  shinyWidgets::updateProgressBar(session, id = "progress_alert", value = 100)
   mean_POD_L <- boot1_PI[, 1]
   mean_POD_U <- boot1_PI[, 2]
   cbind(mean_POD_L, mean_POD_U)
