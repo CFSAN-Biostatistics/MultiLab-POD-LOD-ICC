@@ -26,6 +26,8 @@
 #
 ################################################################################
 
+options(shiny.sanitize.errors = FALSE)
+
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
@@ -40,7 +42,7 @@ library(tidyr)
 
 ###################################################
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.9.0"
+glob_app_version <- "v1.10.0"
 ###################################################
 
 source("R/helpers-element-modifications.R")

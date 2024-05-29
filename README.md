@@ -1,6 +1,6 @@
 ---
 
-## **Introduction (v1.9.0)**
+## **Introduction (v1.10.0)**
 
 This is a Shiny app for interlaboratory microbiological method validation studies. Please <ins>[visit the deployed app](https://multi-lab.galaxytrakr.org/)</ins> to see it in action.
 
@@ -28,19 +28,20 @@ To cite this app in a publication, please use:
 
 ### **Software needed**
 
-R version 4.3.1 or higher is needed. The following R packages (available on CRAN) are also needed:
+R version 4.2.3 or higher is needed. The following R packages (available on CRAN) are also needed:
 
-- shiny (>= v1.7.4.1)
-- shinydashboard (>= v0.7.2)
-- shinyjs (>= v2.1.0)
-- shinybusy (>= v0.3.2)
-- shinyvalidate (>= v0.1.3)
-- lme4 (>= v1.1-35.1)
-- ggplot2 (>= v3.4.4)
-- openxlsx (>= 4.2.5.2)
-- sessioninfo (>= 1.2.2)
-- dplyr (>= 1.1.2)
-- tidyr (>= 1.3.0)
+- shiny (v1.8.1.1)
+- shinydashboard (v0.7.2)
+- shinyjs (v2.1.0)
+- shinybusy (v0.3.3)
+- shinyvalidate (v0.1.3)
+- Matrix (v1.6-3)
+- lme4 (v1.1-35.3)
+- ggplot2 (v3.5.1)
+- openxlsx (v4.2.5.2)
+- sessioninfo (v1.2.2)
+- dplyr (v1.1.4)
+- tidyr (v1.3.1)
 
 ---
 

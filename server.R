@@ -1,5 +1,5 @@
 server <- function(input, output, session) {
-  
+
   observeEvent(c(input$my_tabs, input$mod), {
     shinyjs::runjs(
       'setTimeout(function() {
@@ -149,6 +149,21 @@ server <- function(input, output, session) {
   })
 
   output$model_results <- renderPrint(model_fit())
+
+  # ##########################################################
+  ## For testing only
+  # output$test_model <- renderPrint({
+  #   dat <- dat()$data_model()
+  #   dat <- dat[dat$inoculum_per_unit != 0, ]
+  #   x <- lme4::glmer(
+  #     cbind(npos, ntest - npos) ~
+  #       offset(log(sample_size)) + offset(log(inoculum_per_unit)) + (1 | lab_id),
+  #     data = dat, family = binomial(link = "cloglog"),
+  #     control = lme4::glmerControl(optimizer = "bobyqa"), nAGQ = 21
+  #   )
+  #   summary(x)
+  # })
+  # #############################################################
 
   output$warning_messages_results_UI <- renderUI({
     warnings <- model_fit()$warnings
@@ -368,16 +383,16 @@ server <- function(input, output, session) {
     p.all <- p.all +
       # Do not use aes to avoid double legend
       geom_segment(x = LOD_L, xend = LOD_L, y = 0, yend = lod_prob,
-        colour = "blue", size = rel(1)
+        colour = "blue", linewidth = rel(1)
       ) +
       geom_segment(x = LOD_U, xend = LOD_U, y = 0, yend = lod_prob,
-        colour = "blue", size = rel(1)
+        colour = "blue", linewidth = rel(1)
       ) +
       geom_segment(x = LOD, xend = LOD, y = 0, yend = lod_prob,
-        colour = "blue", size = rel(1)
+        colour = "blue", linewidth = rel(1)
       ) +
       geom_segment(x = 0, xend = LOD_U, y = lod_prob, yend = lod_prob,
-        colour = "blue", size = rel(1)
+        colour = "blue", linewidth = rel(1)
       ) +
       annotate("text", x = LOD_L - vjust, y = lod_prob / 2,
         label = LOD_L_rounded, size = rel(5), angle = 90
@@ -414,19 +429,19 @@ server <- function(input, output, session) {
           size = rel(1.75), color = "black",
           margin = margin(t = 0, r = 5, b = 0, l = 0, unit = "pt")
         ),
-        axis.ticks = element_line(size = rel(1.5)),
-        axis.line  = element_line(size = rel(1.5)),
+        axis.ticks = element_line(linewidth = rel(1.5)),
+        axis.line  = element_line(linewidth = rel(1.5)),
         legend.background = element_rect(fill = "grey90"),
         legend.margin     = margin(t = 5, r = 10, b = 5, l = 10, unit = "pt"),
         legend.text       = element_text(size = rel(1.25), color = "black"),
         legend.title      = element_text(size = rel(1.5), color = "black"),
         panel.background = element_rect(fill = "grey90", color = "white"),
         panel.border = element_rect(
-          linetype = "solid", size = rel(3), color = "black", fill = NA
+          linetype = "solid", linewidth = rel(3), color = "black", fill = NA
         ),
-        panel.grid.major.x = element_line(size = rel(1), color = "white"),
-        panel.grid.major.y = element_line(size = rel(2.5), color = "white"),
-        panel.grid.minor   = element_line(size = rel(1), color = "white"),
+        panel.grid.major.x = element_line(linewidth = rel(1), color = "white"),
+        panel.grid.major.y = element_line(linewidth = rel(2.5), color = "white"),
+        panel.grid.minor   = element_line(linewidth = rel(1), color = "white"),
         plot.background = element_rect(fill = "white"),
         plot.title = element_text(
           size = rel(2.25), color = "black", hjust = 0.5,

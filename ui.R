@@ -134,13 +134,14 @@ my_results <- tabItem(tabName = "results",
           )
         ),
         column(width = 9,
-          fluidRow(htmlOutput("warning_messages_results_UI"))
+          fluidRow(htmlOutput("warning_messages_results_UI"))#,
+          #fluidRow(verbatimTextOutput("test_model"))  #for testing only
         )
       ),
       tabPanel(
         title = HTML("<strong>POD Curves</strong>"), value = "pod_curves",
         icon = icon2("chart-line"),
-        tags$div(id = "POD_plots_div", 
+        tags$div(id = "POD_plots_div",
           plotOutput("POD_plots", width = "75%", height = "650px")
         )
       )
