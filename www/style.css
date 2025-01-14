@@ -40,6 +40,11 @@ h2 {
   font-weight: bold;
 }
 
+hr {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
 caption {
   font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
   color: #555555;
@@ -81,7 +86,7 @@ span:has(> #upload_file-upload_data:focus) {
 }
 
 .navbar {
-  background-color: #347da7 !important;
+  background-color: #005f9f !important;
 }
 
 .sidebar-toggle {
@@ -110,7 +115,8 @@ span:has(> #upload_file-upload_data:focus) {
 }
 
 .logo {
-  background-color: #347da7 !important;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
+  background-color: #005f9f !important;
 }
 
 .sidebar-menu {
@@ -171,7 +177,8 @@ select option {
   transform: translate(-50%, -60%);
   font-size: 24px;
   font-family: 'helvetica neue', helvetica, arial, sans-serif !important;
-  min-width: 600px;
+  width: 100% !important;
+  max-width: 600px !important;
 }
 
 .shiny-notification {
@@ -368,8 +375,16 @@ select option {
     border-bottom-left-radius: 0;
 }
 
+.uploaded_data_preview_div {
+  overflow-x: auto !important;
+}
+
 
 /*-----------------------------  Example data  -------------------------------*/
+
+#example_data_div {
+  overflow-x: auto !important;
+}
 
 .table {
   font-size: 18px;
@@ -378,8 +393,19 @@ select option {
 
 /*-----------  LOD Units, Calculate button, & Notes/Instructions -------------*/
 
-#calculate-lod_unit-label {
-  font-size: 24px;
+#calculate-lod_unit-label, #calculate-observed_unit-label {
+  font-size: 22px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+}
+
+#calculate-observed_unit {
+  font-size: 18px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
+  text-align: center;
+}
+
+.form-group.has-error label {
+  color: #d12212 !important;
 }
 
 .calculate-button {
@@ -422,6 +448,10 @@ select option {
 /******************************************************************************/
 /*------------------------------  Results tab  -------------------------------*/
 /******************************************************************************/
+
+a[role=tab] {
+  color: #005f9f;
+}
 
 .download-results {
   color: black !important;

@@ -17,6 +17,7 @@ uploadDataUI <- function(id, label = "Upload Excel file (.xlsx)",
   )
   my_input$children[[2]]$children[[1]]$children[[1]]$children[[2]]$attribs$onchange <- onchange
   my_input$children[[2]]$children[[2]]$attribs$`aria-label` <- "Uploaded file"
+  my_input$children[[2]]$children[[2]]$attribs$id <- ns("uploaded_file")
   tagList(
     div(class = "download-template",
       "Please",
@@ -33,7 +34,9 @@ uploadDataUI <- function(id, label = "Upload Excel file (.xlsx)",
       htmlOutput(ns("uploaded_test_portion"),
         style = "font-size: 22px; margin-bottom: 5px;"
       ),
-      tableOutput(ns("uploaded_data_preview"))
+      tags$div(class = "uploaded_data_preview_div",
+        tableOutput(ns("uploaded_data_preview"))
+      )
     )
   )
 }

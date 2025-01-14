@@ -5,6 +5,14 @@ icon2 <- function(name, class = NULL, lib = "font-awesome", ...) {
   icon_tag
 }
 
+menuItem2 <- function(text, tab_name = NULL,
+                      icon, newtab = TRUE, href = NULL) {
+  li_tag <- menuItem(text,
+    tabName = tab_name, icon = icon, newtab = newtab, href = href
+  )
+  tagAppendAttributes(li_tag, role = "listitem")
+}
+
 helpText2 <- function(text, id = NULL) {
   shiny::helpText(id = id, class = "help-text", HTML(text))
 }

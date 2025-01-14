@@ -3,10 +3,15 @@
 runAnalysisInput <- function(id) {
   ns <- NS(id)
   tagList(
+    textInput(ns("observed_unit"),
+      label = "Please enter observed unit",
+      value = "CFU",
+      placeholder = "for example CFU or oocyst"
+    ),
     radioButtons(ns("lod_unit"),
       label = "Please choose LOD unit",
       choices = c("CFU/test portion", "CFU/g", "CFU/mL"),
-      selected = "CFU/test portion", inline = TRUE
+      selected = character(0), inline = TRUE
     ),
     actionButton(ns("calculate"),
       label = "Calculate", icon = icon2("calculator"),
@@ -20,15 +25,33 @@ runAnalysisServer <- function(id, sidebar_select, choose_data_entry) {
   stopifnot(is.reactive(choose_data_entry))
   moduleServer(id,
     function(input, output, session) {
+      iv <- InputValidator$new()
+      iv$add_rule("observed_unit", sv_required())
+      iv$enable()
+      observeEvent(input$observed_unit, {
+        updateRadioButtons(
+          session = session,
+          inputId = "lod_unit",
+          choices = paste0(input$observed_unit, c("/test portion", "/g", "/mL")),
+          selected = character(0), inline = TRUE
+        )
+      })
       eventReactive(input$calculate, {
+        req(iv$is_valid()) 
+        validateWithAlert(!is.null(input$lod_unit),
+          title = "Missing input",
+          text = span("Please choose the LOD unit."),
+          session = session
+        )
         list(
           date_time = strftime(Sys.time(), format = "", tz = "", usetz = TRUE),
           choose_data_entry = choose_data_entry(),
-          lod_unit   = input$lod_unit,
-          lod_choice = sidebar_select$lod_choice(),
-          lod_perc   = sidebar_select$lod_perc(),
-          lod_prob   = sidebar_select$lod_prob(),
-          conf_level = sidebar_select$conf_level(),
+          observed_unit = input$observed_unit,
+          lod_unit      = input$lod_unit,
+          lod_choice      = sidebar_select$lod_choice(),
+          lod_perc        = sidebar_select$lod_perc(),
+          lod_prob        = sidebar_select$lod_prob(),
+          conf_level      = sidebar_select$conf_level(),
           conf_level_prob = sidebar_select$conf_level_prob()
         )
       })
@@ -36,12 +59,12 @@ runAnalysisServer <- function(id, sidebar_select, choose_data_entry) {
   )
 }
 
-
 # # For testing ------------------------------------------------------------------
 # library(shiny)
 # source("R/mod-sidebar-select.R")
 # source("R/mod-data-choices.R")
 # source("R/helpers-element-modifications.R")
+# source("R/helpers-validate-inputs.R")
 # runAnalysisApp <- function() {
 #   ui <- fluidPage(
 #     includeCSS("www/style.css"),

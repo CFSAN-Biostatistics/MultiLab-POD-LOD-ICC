@@ -91,7 +91,7 @@ labLevelInput <- function(id, max_levels, default_levels) {
       column(width = 4, align = "center", class = "lab-well-inner",
         tags$div(style = "padding: 10px;",
           tags$span("Inoculation level", class = "lab-well-column-names"),
-          tags$span("(CFU/test portion)", class = "lab-well-column-names")
+          tags$span("(per test portion)", class = "lab-well-column-names")
         ),
         #https://shiny.rstudio.com/gallery/creating-a-ui-from-a-loop.html
         lapply(level_indices, function(i) {
@@ -186,8 +186,7 @@ labLevelServer <- function(id, chosen_levels) {
 #   ui <- fluidPage(
 #     includeCSS("www/style.css"),
 #     shinyjs::useShinyjs(),
-#     labLevelInput("lab1", my_max_levels, my_chosen_levels
-#     ),
+#     labLevelInput("lab1", my_max_levels, my_chosen_levels),
 #     verbatimTextOutput("my_df")
 #   )
 #   server <- function(input, output, session) {

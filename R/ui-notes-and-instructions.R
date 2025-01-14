@@ -59,8 +59,8 @@ data_entry_instructions <- shinydashboard::box(
             Change the lab name if desired.
           </li>
           <li class = "notes-li">
-            In the first column, enter the inoculation (dilution) levels
-            in CFU/test portion. Please do not use CFU/g, etc.
+            In the first column, enter the inoculation levels
+            in units per test portion. Please do not use units per g, etc.
             Click <em>Fill other labs</em> underneath the column to
             populate the remaining labs.
           </li>

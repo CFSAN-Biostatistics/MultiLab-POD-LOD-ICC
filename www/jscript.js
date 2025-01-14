@@ -1,21 +1,25 @@
-/* Run on app startup */
-setTimeout(function() {
-  // Remove focus from tabs panels
-  document.querySelectorAll("[role=\\042tabpanel\\042]").forEach(function(div) {
-    div.removeAttribute("tabindex")
-  })
-  // Make sure links are tabbable
-  document.getElementsByTagName("a").forEach(function(a) {
-    a.setAttribute("tabindex", "0")
-  })
-  // Add "listitem" role attribute to elements in sidebar menu
-  document.getElementsByClassName("sidebar-menu").forEach(function(ul) {
-    ul.children.forEach(function(child) {
-      child.setAttribute("role", "listitem")
-    })
-  })
-}, 500)
+// Run repeatedly to ensure focus
+function addFocus(element) {
+  element.setAttribute('tabindex', '0');
+}
 
+function adjustAside() {
+  // Add focus to all <a> elements in the <aside>
+  // Remove aria-selected attrib
+  const aLinks = document.getElementById('my_aside').querySelectorAll('a');
+  aLinks.forEach(addFocus);
+  aLinks.forEach(function(ele) {
+    ele.removeAttribute("aria-selected");
+  })
+}
+
+function adjustTabPanels() {
+  // Remove focus from all tabpanel elements
+  const tabPanels = document.querySelectorAll(".tab-pane");
+  tabPanels.forEach(function(ele) {
+    ele.removeAttribute("tabindex");
+  })
+}
 
 /* Enforce correct file extension on upload */
 //https://stackoverflow.com/questions/62220495/r-shiny-restrict-fileinput-to-filename-pattern-and-not-just-file-type

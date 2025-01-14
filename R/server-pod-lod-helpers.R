@@ -17,7 +17,7 @@ isErrorLODRE <- function(fitted_RE_model, lod_prob, sample_size, inoculum_per_un
 
 lodCalcErrorAlert <- function(session) {
   modal("LOD Calculation Error", session,
-    span("Possibly due to zero-probability predictions.")
+    span("Possibly due to zero-probability predictions or insufficient maximum inoculation level.")
   )
 }
 
@@ -50,7 +50,7 @@ lodPointRE <- function(model, value, sample_size, inoculum_per_unit) {
     my_prediction - value
   }
   lower_endpt <- 0
-  upper_endpt <- max(inoculum_per_unit) + 0.1
+  upper_endpt <- max(inoculum_per_unit) + 0.1 
   sign_lower  <- sign(findInt(lower_endpt))
   sign_upper  <- sign(findInt(upper_endpt))
   if (sign_lower == sign_upper || sign_lower == 0 || sign_upper == 0) {

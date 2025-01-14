@@ -1,23 +1,8 @@
 server <- function(input, output, session) {
 
-  observeEvent(c(input$my_tabs, input$mod), {
-    shinyjs::runjs(
-      'setTimeout(function() {
-        // Remove focus from tab panels
-        document.querySelectorAll("[role=\\042tabpanel\\042]").forEach(function(div) {
-          div.removeAttribute("tabindex")
-        })
-        // Make sure links are focusable & do not have aria-selected attrib
-        document.getElementsByTagName("a").forEach(function(a) {
-          a.setAttribute("tabindex", "0")
-          a.removeAttribute("aria-selected")
-        })
-        // Make sure disabled elements are not focusable
-        document.getElementsByClassName("disabled").forEach(function(dis) {
-          dis.removeAttribute("tabindex")
-        })
-      }, 500)'
-    )
+  observeEvent(c(input$my_tabs), {
+    shinyjs::runjs("adjustAside();")
+    shinyjs::runjs("adjustTabPanels();")
   })
 
   observeEvent(c(input$`choose_data_entry-radio_group`, input$`upload_file-upload_data`), {
@@ -310,6 +295,7 @@ server <- function(input, output, session) {
     lod_choice  <- start_analysis()$lod_choice
     lod_prob    <- start_analysis()$lod_prob
     lod_perc    <- start_analysis()$lod_perc
+    LOD99       <- POD_LOD()$LOD99  #can be NA
     inoc_levels <- POD_LOD()$inoc_levels
     inoc_max    <- POD_LOD()$inoc_max
     predicted_all_labs <- POD_LOD()$predicted_all_labs
@@ -326,24 +312,37 @@ server <- function(input, output, session) {
     conf_level_no_perc <- gsub("%", replacement = "", conf_level, fixed = TRUE)
     #https://stackoverflow.com/questions/43415217/how-do-i-add-percentage-and-fractions-to-ggplot-geom-text-label
     my_label <- paste0("LOD[", lod_perc, "] == ", LOD_rounded)
-    if (lod_unit == "CFU/test portion") {
+    if (grepl("test portion", lod_unit)) {
       dat$inoc_level <- dat$inoculum
       predicted_each_lab$inoc_level <- sample_size * predicted_each_lab$inoculum_per_unit
       predicted_all_labs$inoc_level <- sample_size * predicted_all_labs$inoculum_per_unit
       inoc_levels <- sample_size * inoc_levels
-      inoc_max    <- max(inoc_levels)
+      inoc_max <- round(min(LOD99, max(inoc_levels), na.rm = TRUE), 2)
     } else {
       dat$inoc_level <- dat$inoculum_per_unit
       predicted_each_lab$inoc_level <- predicted_each_lab$inoculum_per_unit
       predicted_all_labs$inoc_level <- predicted_all_labs$inoculum_per_unit
+      inoc_max <- round(min(LOD99, inoc_max, na.rm = TRUE), 3)
     }
-    my_breaks_x <- unique(c(0, inoc_levels))
-    if (inoc_max < 0.5) {
+    my_breaks_x <- unique(c(0, inoc_levels, inoc_max))
+    if (inoc_max < .01) {
+      inoc_incr <- .0001
+    } else if (inoc_max < .1) {
+      inoc_incr <- .001
+    } else if (inoc_max < 1) {
       inoc_incr <- .01
-    } else if (inoc_max < 8) {
+    } else if (inoc_max < 10) {
       inoc_incr <- .1
-    } else {
+    } else if (inoc_max < 100) {
       inoc_incr <- 1
+    } else if (inoc_max < 1000) {
+      inoc_incr <- 10
+    } else if (inoc_max < 10000) {
+      inoc_incr <- 100
+    } else if (inoc_max < 100000) {
+      inoc_incr <- 1000
+    } else {
+      inoc_incr <- .01 * inoc_max
     }
     my_plot <- ggplot(dat,
         aes(x = inoc_level, y = POD, color = as.factor(lab_id))
@@ -404,7 +403,7 @@ server <- function(input, output, session) {
         label = paste0("LOD", lod_choice, " =  ", LOD_rounded),
         size = rel(5), angle = 90
       ) +
-      annotate("label", x = 0.75 * inoc_max, y = 0.375,
+      annotate("label", x = 0.85 * inoc_max, y = 0.15,
         label = my_label, parse = TRUE,
         size = rel(8), color = "red", fontface = "bold",
         label.padding = unit(0.75, "lines"),

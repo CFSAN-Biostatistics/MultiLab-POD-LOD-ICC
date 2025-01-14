@@ -1,16 +1,16 @@
 ################################  Sidebar  #####################################
 
 sidebar_menu <- sidebarMenu(id = "my_tabs",
-  menuItem("Calculator", tabName = "calculator",
+  menuItem2("Calculator", tab_name = "calculator",
     icon = icon2("calculator")
   ),
-  menuItem("Results", tabName = "results",
+  menuItem2("Results", tab_name = "results",
     icon = icon2("chart-line")
   ),
-  menuItem("Analysis Details", tabName = "analysis_details",
+  menuItem2("Analysis Details", tab_name = "analysis_details",
     icon = icon2("info")
   ),
-  menuItem("References", tabName = "references",
+  menuItem2("References", tab_name = "references",
     icon = icon2("info")
   )
 )
@@ -77,7 +77,9 @@ my_calculator <- tabItem(tabName = "calculator",
                 "Test portion size:", glob_sample_size_example, glob_sample_unit_example,
                 style = "font-size: 20px;"
               ),
-              tableOutput("example_data")
+              tags$div(id = "example_data_div",
+                tableOutput("example_data")
+              )
             )
           )
         )
@@ -154,9 +156,12 @@ my_results <- tabItem(tabName = "results",
 dashboard_header <- dashboardHeader(title = glob_app_title, titleWidth = 275)
 dashboard_header[[3]][[3]][[3]][[2]]$attribs$tabindex <- "0"
 
+dashboard_sidebar <- dashboardSidebar(sidebar_menu, sidebar_extra, width = 275)
+dashboard_sidebar$attribs$id <- "my_aside"  #<aside> element
+
 ui <- dashboardPage(
   dashboard_header,
-  dashboardSidebar(sidebar_menu, sidebar_extra, width = 275),
+  dashboard_sidebar,
   dashboardBody(
     shinyjs::useShinyjs(),
     tags$html(lang = "en-US"),
@@ -176,23 +181,22 @@ ui <- dashboardPage(
           "between-laboratory variance."
         )
       ),
-      #https://stackoverflow.com/questions/45706670/shiny-dashboadpage-lock-dashboardheader-on-top
-      tags$script(HTML("$('body').addClass('fixed');"), defer = "defer"),
+      tags$meta(name = "viewport", content = "width=device-width, initial-scale=1"),
       tags$script(withMathJax(), defer = "defer"),
       #includeScript("www/jscript.js", defer = "defer"),  #for code development only!!!
-      tags$script(src = "jscript.js", defer = "defer"),  #for production
+      tags$script(src = glob_js_query, type = "text/javascript", defer = "defer"),  #for production
       #includeCSS("www/style.css")  #for code development only!!!
-      tags$link(rel = "stylesheet", type = "text/css", href = glob_css_query)  #for production
+      tags$link(rel = "stylesheet", type = "text/css", href = glob_css_query, defer = "defer")  #for production
     ),
     HTML("<main>"),
-    tabItems(
-      my_calculator,
-      my_results,
-      my_analysis_details,
-      my_references
-    ),
+      tabItems(
+        my_calculator,
+        my_results,
+        my_analysis_details,
+        my_references
+      ),
     HTML("</main>")
   ),
-  title = glob_app_title
+  title = glob_page_title
 )
 ################################################################################

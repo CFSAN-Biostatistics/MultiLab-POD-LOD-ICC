@@ -18,7 +18,7 @@ sidebarSelectInput <- function(id) {
   ns <- NS(id)
   tagList(
     selectInput_sidebar(ns("lod_choice"), label = "Choose LOD",
-      choices = c("LOD50" = "50"), selected = "LOD50"
+      choices = c("LOD50" = "50", "LOD95" = "95"), selected = "LOD50"
     ),
     selectInput_sidebar(ns("conf_level"), label = "Confidence level",
       choices = c("90%", "95%"), selected = "95%"

@@ -38,6 +38,7 @@ podLod <- function(run_analysis, dat_list, fitted_model, n_sim, session) {
       lab_effects <- labEffectsRE(fit1, lab_names, mu_log_se)
       is_LOD_error <- isErrorLODRE(fit1, lod_prob, sample_size, dat$inoculum_per_unit)
       if (is_LOD_error) {
+        shinyjs::enable(selector = "button[class*='calculate-button']")
         lodCalcErrorAlert(session)
       }
       req(!is_LOD_error)
@@ -50,6 +51,15 @@ podLod <- function(run_analysis, dat_list, fitted_model, n_sim, session) {
         LOD, inoc_max, lab_ids, sample_size, n_sim, alpha_level, session
       )
       LOD_CI <- lodCIRE(predicted_all_labs, lod_prob)
+      # Find upper value for plotting
+      is_LOD_error99 <- isErrorLODRE(fit1, 0.99, sample_size, dat$inoculum_per_unit)
+      if (is_LOD_error99) {
+        LOD99 <- NA
+      } else {
+        LOD99 <- lodPointRE(fit1,
+          value = 0.99, sample_size = sample_size, inoculum = dat$inoculum_per_unit
+        )
+      }
       shinyjs::enable(selector = "button[class*='calculate-button']")
     })
   } else if (model_type == "fixed effects") {
@@ -65,15 +75,18 @@ podLod <- function(run_analysis, dat_list, fitted_model, n_sim, session) {
     predicted_each_lab <- podEachLabFE(fit2, LOD, inoc_max, lab_ids, sample_size)
     # Population-level POD and CI
     predicted_all_labs <- podAllLabsFE(fit1, LOD, inoc_max, lab_ids, sample_size, t_critval)
+    # Find upper value for plotting
+    LOD99 <- lodPointFE(mu, 0.99, sample_size)
   } else {
     stop("Problem with model_type")
   }
   LOD_L <- LOD_CI[1]
   LOD_U <- LOD_CI[2]
-  if (lod_unit == "CFU/test portion") {
+  if (grepl("test portion", lod_unit)) {
     LOD   <- LOD * sample_size
     LOD_L <- LOD_L * sample_size
     LOD_U <- LOD_U * sample_size
+    LOD99 <- LOD99 * sample_size
   }
   LOD_char   <- format3(LOD)
   LOD_L_char <- format3(LOD_L)
@@ -83,13 +96,14 @@ podLod <- function(run_analysis, dat_list, fitted_model, n_sim, session) {
     lab_effects = lab_effects, num_labs = num_labs,
     inoc_levels = inoc_levels, num_levels = num_levels, inoc_max = inoc_max,
     LOD = LOD, LOD_L = LOD_L, LOD_U = LOD_U,
-    LOD_char = LOD_char, LOD_L_char = LOD_L_char, LOD_U_char = LOD_U_char
+    LOD_char = LOD_char, LOD_L_char = LOD_L_char, LOD_U_char = LOD_U_char,
+    LOD99 = LOD99
   )
 }
 
 
 # #-------------------------------  Testing  -------------------------------------
-#
+
 # # For testing uploaded data files
 # library(shiny)
 # source("R/helpers-validate-inputs.R")
@@ -101,7 +115,7 @@ podLod <- function(run_analysis, dat_list, fitted_model, n_sim, session) {
 #   ui <- fluidPage(
 #     shinyjs::useShinyjs(),
 #     includeCSS("www/style.css"),
-#     #verbatimTextOutput("my_data"),
+#     verbatimTextOutput("my_data"),
 #     verbatimTextOutput("my_model_results"),
 #     verbatimTextOutput("my_pod_results"),
 #     fluidRow(align = "center", uploadDataUI("my_id"))
@@ -110,8 +124,11 @@ podLod <- function(run_analysis, dat_list, fitted_model, n_sim, session) {
 #     my_analysis <- reactive(list(
 #       lod_unit = "CFU/test portion", lod_prob = 0.50, conf_level_prob = 0.95
 #     ))
-#     my_data <- uploadDataServer("my_id")
-#     #output$my_data <- renderPrint(my_data())
+#     choose_data_entry <- dataChoicesServer("choose_data_entry")
+#     sidebar_select <- sidebarSelectServer("sidebar_select")
+#     start_analysis <- runAnalysisServer("calculate", sidebar_select, choose_data_entry)
+#     my_data <- uploadDataServer("my_id", start_analysis)
+#     output$my_data <- renderPrint(my_data())
 #     my_model <- eventReactive(my_data(), {
 #       fitModel(my_data()$data_model(), session)
 #     })
