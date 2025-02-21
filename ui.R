@@ -30,8 +30,8 @@ sidebar_extra <- tagList(
   ),
   div(id = "mail_to",
     "Please",
-    a("email John Ihrie",
-      href = "mailto:John.Ihrie@fda.hhs.gov", class = "email-link"
+    a("email HFP Biostatistics apps", class = "email-link",
+      href = "mailto:HFP_Biostatistics_apps@fda.hhs.gov?subject=MultiLab POD/LOD/ICC bug/suggestion"
     ),
     "with suggestions or bug reports."
   )

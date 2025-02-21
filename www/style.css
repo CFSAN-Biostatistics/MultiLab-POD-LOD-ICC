@@ -161,6 +161,12 @@ select option {
 .email-link {
   text-decoration: underline;
 }
+.email-link:hover {
+  text-decoration: none;
+}
+.email-link:focus {
+  text-decoration: none;
+}
 
 
 /******************************************************************************/
@@ -338,6 +344,12 @@ select option {
 .template-link {
   text-decoration: underline;
   color: #005f9f;
+}
+.template-link:hover {
+  text-decoration: none;
+}
+.template-link:focus {
+  text-decoration: none;
 }
 
 #upload_file-upload_data-label {

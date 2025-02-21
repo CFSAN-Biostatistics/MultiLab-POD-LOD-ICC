@@ -1,6 +1,6 @@
 ---
 
-## **Introduction (v1.11.0)**
+## **Introduction (v1.12.0)**
 
 This is a Shiny app for interlaboratory microbiological method validation studies. Please <ins>[visit the deployed app](https://pub-connect.foodsafetyrisk.org/method-validation/multilab-lod/)</ins> to see it in action.
 

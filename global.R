@@ -42,7 +42,7 @@ library(tidyr)
 
 ###################################################
 glob_app_title   <- "MultiLab POD/LOD/ICC"
-glob_app_version <- "v1.11.0"
+glob_app_version <- "v1.12.0"
 glob_page_title  <- "MultiLab POD/LOD/ICC"
 ###################################################
 
